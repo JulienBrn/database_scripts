@@ -1,4 +1,5 @@
 import pandas as pd, numpy as np, re
+from pathlib import Path
 
 def generate_duplicate_table(param_data, selection={}, *, drop_column= "__drop__", ):
     if not isinstance(param_data, list):
@@ -79,3 +80,24 @@ def json_merge(*d, incompatible="raise"):
     for di in d[1:]:
         curr= json_merge_impl(curr, di)
     return curr
+
+def singleglob(p: Path, *patterns, search_upward_limit=None, error_string='Found {n} candidates for pattern {patterns} in folder {p}', only_ok=False):
+    all = [path for pat in patterns for path in p.glob(pat)]
+    if search_upward_limit is not None and len(all) == 0 and search_upward_limit != p:
+        return singleglob(p.parent, *patterns, search_upward_limit=search_upward_limit, error_string=error_string)
+    if only_ok:
+        return len(all)==1
+    if len(all) >1:
+        raise FileNotFoundError(error_string.format(p=p, n=len(all), patterns=patterns))
+    if len(all) ==0:
+        raise FileNotFoundError(error_string.format(p=p, n=len(all), patterns=patterns))
+    return all[0]
+
+class Waveform:
+    def __init__(self, **kwargs):
+        self.d = kwargs
+
+
+    
+    def mk_binary_waveform(rises, durations, base_value=0, event_value=1, change_speed=0.0001):
+        return Waveform(type="binary", **locals())

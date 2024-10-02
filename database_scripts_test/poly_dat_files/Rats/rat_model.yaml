@@ -7,6 +7,9 @@ processing:
       filter_expr: 'channel_name=="{channel_name}"'
       state_expr: '_P'
       count_expr: '_L'
+      expected_count_expr: 'task[2].fillna(1)'
+      duration_on_expr: 'task[0]'
+      duration_off_expr: 'task[1].fillna(0)/1000'
 
   - duplicate_over:
       channel_name: ['TTLP(2|5|6|7)']
@@ -47,7 +50,9 @@ processing:
     method_params:
       filter_expr: 'channel_name=="{channel_name}"'
       state_expr: '_L'
-      duration: 0.2
+      duration_on_value: 0.2
+      expected_count_expr: 'task[0].fillna(1)' 
+      
 
   - event_name: 'polytask_linechange'
     method: 'step_wave'
