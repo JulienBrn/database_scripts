@@ -1,92 +1,88 @@
-- method: 'square_wave'
-  event_name: '{channel_name}'
-  params:
-    filter_expr: 'channel_name=="{channel_name}"'
-    state_expr: '_P'
-    count_expr: '_L'
-    onoff_ratio: 0.5
-  duplicate_over:
-    channel_name: ['LED(\d+)', 'ASND', 'TTLP(\d+)']
+processing:
+  - duplicate_over:
+      channel_name: ['LED(\d+)', 'ASND', 'TTLP(1|3|4|8)']
+    event_name: '{channel_name}'
+    method: output_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: '_P'
+      count_expr: '_L'
 
-- method: 'square_wave'
-  event_name: '{channel_name}'
-  params:
-    filter_expr: 'channel_name=="{channel_name}"'
-    state_expr: '_V'
-    count_expr: 1
-    onoff_ratio: 0.5
-  duplicate_over:
-    channel_name: ['L(\d+)']
+  - duplicate_over:
+      channel_name: ['TTLP(2|5|6|7)']
+    event_name: '{channel_name}'
+    method: input_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: '_P'
 
-- method: 'state_pulses'
-  event_name: '{channel_name}_reward'
-  params:
-    filter_expr: 'channel_name=="{channel_name}"'
-    pulse_expr: '_L'
-    grp_last_expr: '_P==0'
-  duplicate_over:
-    channel_name: ['LK(\d+)']
+  - duplicate_over:
+      channel_name: ['L(\d+)']
+    event_name: '{channel_name}'
+    method: input_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: '_V'
+
+  - duplicate_over:
+      side: ['_P', '_V']
+    event_name: 'PAD{side}'
+    method: input_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="PAD"'
+      state_expr: '{side}'
+
+  - duplicate_over:
+      channel_name: ['LK(\d+)']
+    event_name: '{channel_name}_lick'
+    method: input_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: '_V'
   
-- method: 'square_wave'
-  event_name: '{channel_name}_lick'
-  params:
-    filter_expr: 'channel_name=="{channel_name}"'
-    state_expr: '_V'
-    count_expr: 1
-    onoff_ratio: 0.5
-  duplicate_over:
-    channel_name: ['LK(\d+)']
+  - duplicate_over:
+      channel_name: ['LK(\d+)']
+    event_name: '{channel_name}_reward'
+    method: output_accumulator_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: '_L'
+      duration: 0.2
 
-- method: 'square_wave'
-  event_name: 'PAD_V'
-  params:
-    filter_expr: 'channel_name=="PAD"'
-    state_expr: '_V'
-    count_expr: 1
-    onoff_ratio: 0.5
+  - event_name: 'polytask_linechange'
+    method: 'step_wave'
+    method_params:
+      filter_expr: 'family==10'
+      state_expr: '_T'
 
-- method: 'square_wave'
-  event_name: 'PAD_P'
-  params:
-    filter_expr: 'channel_name=="PAD"'
-    state_expr: '_P'
-    count_expr: 1
-    onoff_ratio: 0.5
+  - event_name: 'zone_change'
+    method: 'step_wave'
+    method_params:
+      filter_expr: 'family==9'
+      state_expr: '_X'
 
-- method: 'constant_state'
-  event_name: 'polytask_linechange'
-  params:
-    filter_expr: 'family==10'
-    state_expr: '_T'
-
-- method: 'constant_state'
-  event_name: 'zone_change'
-  params:
-    filter_expr: 'family==9'
-    state_expr: '_X'
-
-
-- method: 'pulse_event'
-  event_name: 'RD'
-  params:
-    filter_expr: 'channel_name=="RD"'
-    meta:
+  - event_name: 'RD'
+    method: 'event'
+    method_params:
+      filter_expr: 'channel_name=="RD"'
+    metadata:
       read_value: '_T'
 
-- method: 'pulse_event'
-  event_name: 'pause'
-  params:
-    filter_expr: 'family==11'
-    meta:
+  - event_name: 'pause'
+    method: 'event'
+    method_params:
+      filter_expr: 'family==11'
+    metadata:
       cause: '_V'
-  
-- method: 'pulse_event'
-  event_name: '{channel_name}'
-  params:
-    filter_expr: 'channel_name=="{channel_name}"'
-  discarded: True
-  duplicate_over:
-    channel_name: ['STR(\d+)']
 
 
-  
+display:
+  rename:
+    TTLP1: cue
+    PAD_P: PAD_left
+    PAD_V: PAD_right
+    L1: LEVER_left
+    L2: LEVER_right
+
+
+    
