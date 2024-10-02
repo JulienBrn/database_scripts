@@ -1,6 +1,6 @@
 processing:
   - duplicate_over:
-      channel_name: ['LED(\d+)', 'ASND', 'TTLP(\d+)']
+      channel_name: ['LED(\d+)', 'TTLP(\d+)']
     event_name: '{channel_name}'
     method: output_binary_wave
     method_params:
@@ -11,13 +11,18 @@ processing:
       duration_on_expr: 'task[0]'
       duration_off_expr: 'task[1].fillna(0)/1000'
 
-  # - duplicate_over:
-  #     channel_name: ['TTLP(2|5|6|7)']
-  #   event_name: '{channel_name}'
-  #   method: input_binary_wave
-  #   method_params:
-  #     filter_expr: 'channel_name=="{channel_name}"'
-  #     state_expr: '_P'
+  - event_name: 'ASND'
+    method: output_binary_wave
+    method_params:
+      filter_expr: 'channel_name=="ASND"'
+      state_expr: '_P'
+      count_expr: '_L'
+      expected_count_expr: 'task[2].fillna(1)'
+      duration_on_expr: 'task[0]'
+      duration_off_expr: 'task[1].fillna(0)/1000'
+    metadata:
+      volume_expr: 'task[3]'
+      frequency_expr: 'task[4]'
 
   - duplicate_over:
       channel_name: ['L(\d+)']
@@ -71,14 +76,14 @@ processing:
     method_params:
       filter_expr: 'channel_name=="RD"'
     metadata:
-      read_value: '_T'
+      read_value_expr: '_T'
 
   - event_name: 'pause'
     method: 'event'
     method_params:
       filter_expr: 'family==11'
     metadata:
-      cause: '_V'
+      cause_expr: '_V'
 
 
 display:
