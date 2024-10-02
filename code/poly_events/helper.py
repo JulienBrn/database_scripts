@@ -93,11 +93,3 @@ def singleglob(p: Path, *patterns, search_upward_limit=None, error_string='Found
         raise FileNotFoundError(error_string.format(p=p, n=len(all), patterns=patterns))
     return all[0]
 
-class Waveform:
-    def __init__(self, **kwargs):
-        self.d = kwargs
-
-
-    
-    def mk_binary_waveform(rises, durations, base_value=0, event_value=1, change_speed=0.0001):
-        return Waveform(type="binary", **locals())
