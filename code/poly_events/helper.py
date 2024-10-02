@@ -42,15 +42,6 @@ def replace_vals(d, replacements):
     else:
         return d
     
-def add_to_error(f):
-    def new_f(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except:
-            for arg in args:
-                display(arg)
-            raise
-    return new_f
 
 def json_merge(*d, incompatible="raise"):
     def json_merge_impl(d1, d2):
