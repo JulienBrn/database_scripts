@@ -84,3 +84,34 @@ def singleglob(p: Path, *patterns, search_upward_limit=None, error_string='Found
         raise FileNotFoundError(error_string.format(p=p, n=len(all), patterns=patterns))
     return all[0]
 
+def compute_relevant(event_channels_df, config, copy_columns=[], myeval=lambda df, expr: df.eval(expr)):
+    df = pd.DataFrame()
+    df["t"] = event_channels_df["t"]
+    for col in copy_columns:
+        df[col] = event_channels_df[col]
+    for param, expr in config["method_params"].items():
+        if param.endswith("_expr"):
+            df[param.replace("_expr", "_value")] = myeval(event_channels_df, expr)
+        else:
+            df[param] = expr
+    if "metadata" in config:
+        metadata = pd.DataFrame()
+        for k, v in config["metadata"].items():
+            if k.endswith("_expr"):
+                metadata[k.replace("_expr", "")] = myeval(event_channels_df, v)
+            else:
+                metadata[k] = v
+        df["metadata"] = metadata.apply(lambda row: {k:v for k, v in row.items() if not pd.isna(v)}, axis=1)
+    else:
+        df["metadata"] = [{}] * len(df.index)
+    filtered = df.loc[df["filter_value"]] if "filter_expr" in config["method_params"] else df
+    if "state_expr" in config["method_params"]:
+        relevant = filtered.loc[filtered["state_value"] != filtered["state_value"].shift(1)].copy()
+        relevant["duration"] = relevant["t"].shift(-1) - relevant["t"]
+    else:
+        relevant = filtered.copy()
+    return relevant
+
+
+
+    
