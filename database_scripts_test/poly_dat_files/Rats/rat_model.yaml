@@ -8,7 +8,7 @@ processing:
       state_expr: '_P'
       count_expr: '_L'
       expected_count_expr: 'task[2].fillna(1)'
-      duration_on_expr: 'task[0]'
+      duration_on_expr: 'task[0]/1000'
       duration_off_expr: 'task[1].fillna(0)/1000'
 
   - event_name: 'ASND'
@@ -18,7 +18,7 @@ processing:
       state_expr: '_P'
       count_expr: '_L'
       expected_count_expr: 'task[2].fillna(1)'
-      duration_on_expr: 'task[0]'
+      duration_on_expr: 'task[0]/1000'
       duration_off_expr: 'task[1].fillna(0)/1000'
     metadata:
       volume_expr: 'task[3]'
@@ -98,7 +98,6 @@ processing:
 
 display:
   rename:
-    TTLP1: cue
     PAD_P: PAD_left
     PAD_V: PAD_right
     L1: LEVER_left
