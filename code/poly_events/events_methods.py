@@ -1,4 +1,4 @@
-import pandas as pd, numpy as np
+import pandas as pd, numpy as np, xarray as xr
 import re
 from helper import json_merge
 
@@ -23,6 +23,8 @@ def processing_method(goal):
         def __init__(self, fn):
             if callable(goal):
                 self.fn = goal(fn)
+            else:
+                self.fn = fn
 
         def __set_name__(self, cls, name):
             self.fn.class_name = cls.__name__
@@ -50,6 +52,33 @@ class Processings:
                 raise Exception("Several processing methods with same name declared with different goals...")
             Processings.methods[f_name] = goal
         
+
+class Discretize(Processings):
+    @processing_method(goal="discretize_method")
+    def interupted_sine_wave(data: xr.DataArray, config):
+        sine_fs = config["method_params"]["sine_fs"]
+        fs = 1/(data["t"] - data["t"].shift(t=1)).mean().item()
+        if not (np.abs(data["t"] - np.arange(data.size)/fs) < 0.01/fs).all():
+            raise Exception(f"not regular {fs}")
+
+        mabs : xr.DataArray= np.abs(data).rolling(t=int(np.ceil(fs/sine_fs)), center=True).mean().dropna("t")
+        threshold = mabs.quantile(0.9, "t").item() *0.6
+        # print(threshold, mabs)
+        drops = mabs.where((mabs > threshold) & (mabs.shift(t=-1) < threshold), drop=True)
+        rises = mabs.where((mabs < threshold) & (mabs.shift(t=-1) > threshold), drop=True)
+        resd = pd.DataFrame().assign(t=drops["t"].to_numpy()+0.5/sine_fs, channel_name=config["dest_channel"], State=1)
+        resr = pd.DataFrame().assign(t=rises["t"].to_numpy()+0.5/sine_fs, channel_name=config["dest_channel"], State=0)
+        import matplotlib.pyplot as plt
+        f, ax = plt.subplots(1)
+        ax: plt.Axes
+        data.plot(x="t", ax=ax)
+        mabs.plot(x="t", ax=ax, color="green")
+        ax.vlines(resd["t"], data.min().item(), data.max().item(), color="green")
+        ax.vlines(resr["t"], data.min().item(), data.max().item(), color="red")
+        ax.hlines([threshold], 0, data["t"].max(), color="gray")
+        ax.set_xlim(1150, 1153)
+        return pd.concat([resd, resr]).sort_values("t"), f
+    
     
 class EventProcessing(Processings):
     @staticmethod
@@ -115,7 +144,7 @@ class EventProcessing(Processings):
         return relevant
     
     @staticmethod
-    def process_info(channels, processing_info):
+    def process_info(channels, processing_info, dest_name="event_name"):
         event_spec = []
         for item in processing_info:
             if "duplicate_over" not in item:
@@ -127,10 +156,10 @@ class EventProcessing(Processings):
                 del final_d["duplicate_over"]
                 event_spec.append(final_d)
 
-        unique_df = pd.DataFrame(event_spec)["event_name"].value_counts().reset_index()
+        unique_df = pd.DataFrame(event_spec)[dest_name].value_counts().reset_index()
         if not (unique_df["count"] == 1).all():
-            raise Exception(f'Event name duplication\n{unique_df.loc[unique_df["count"] > 1]}')
-        return {v["event_name"]: v for v in event_spec}
+            raise Exception(f'Name duplication ({dest_name} duplicated)\n{unique_df.loc[unique_df["count"] > 1]}')
+        return {v[dest_name]: v for v in event_spec}
 
 class FiberEventProcessing(EventProcessing):pass
 
