@@ -1,0 +1,16 @@
+processing:
+  - duplicate_over:
+      channel_name: ['Input(\d+)']
+    event_name: '{channel_name}'
+    method: 'input_binary_wave'
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: 'State==0'
+
+display:
+  rename:
+    Input1: cue
+    
+
+
+    

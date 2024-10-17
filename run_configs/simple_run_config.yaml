@@ -1,0 +1,15 @@
+
+runs: 
+  - 
+    script: "polydat_file_to_events.ipynb"
+    script_params:
+      dat_path: 'myfile.dat'
+      task_path: 'task.xls'
+      config_path: 'config.yaml'
+      dest_path: 'dest_folder'
+    prepare_only: False
+    html_script_export: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events.html'
+      
+additional:
+  html_run_export: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events'
+      

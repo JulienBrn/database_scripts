@@ -68,17 +68,36 @@ class Discretize(Processings):
         rises = mabs.where((mabs < threshold) & (mabs.shift(t=-1) > threshold), drop=True)
         resd = pd.DataFrame().assign(t=drops["t"].to_numpy()+0.5/sine_fs, channel_name=config["dest_channel"], State=1)
         resr = pd.DataFrame().assign(t=rises["t"].to_numpy()+0.5/sine_fs, channel_name=config["dest_channel"], State=0)
-        import matplotlib.pyplot as plt
-        f, ax = plt.subplots(1)
-        ax: plt.Axes
-        data.plot(x="t", ax=ax)
-        mabs.plot(x="t", ax=ax, color="green")
-        ax.vlines(resd["t"], data.min().item(), data.max().item(), color="green")
-        ax.vlines(resr["t"], data.min().item(), data.max().item(), color="red")
-        ax.hlines([threshold], 0, data["t"].max(), color="gray")
-        ax.set_xlim(1150, 1153)
-        return pd.concat([resd, resr]).sort_values("t"), f
+        # import matplotlib.pyplot as plt
+        # f, ax = plt.subplots(1)
+        # ax: plt.Axes
+        # data.plot(x="t", ax=ax)
+        # mabs.plot(x="t", ax=ax, color="green")
+        # ax.vlines(resd["t"], data.min().item(), data.max().item(), color="green")
+        # ax.vlines(resr["t"], data.min().item(), data.max().item(), color="red")
+        # ax.hlines([threshold], 0, data["t"].max(), color="gray")
+        # ax.set_xlim(1150, 1153)
+        return pd.concat([resd, resr]).sort_values("t")
     
+    @processing_method(goal="discretize_method")
+    def analog_to_binary(data: xr.DataArray, config):
+        rel = config["method_params"]["threshold_rel_max"]
+        threshold = data.max().item()*rel
+        # print(threshold, mabs)
+        drops = data.where((data > threshold) & (data.shift(t=-1) < threshold), drop=True)
+        rises = data.where((data < threshold) & (data.shift(t=-1) > threshold), drop=True)
+        resd = pd.DataFrame().assign(t=drops["t"].to_numpy(), channel_name=config["dest_channel"], State=0)
+        resr = pd.DataFrame().assign(t=rises["t"].to_numpy(), channel_name=config["dest_channel"], State=1)
+        import matplotlib.pyplot as plt
+        # f, ax = plt.subplots(1)
+        # ax: plt.Axes
+        # data.plot(x="t", ax=ax)
+        # mabs.plot(x="t", ax=ax, color="green")
+        # ax.vlines(resd["t"], data.min().item(), data.max().item(), color="green")
+        # ax.vlines(resr["t"], data.min().item(), data.max().item(), color="red")
+        # ax.hlines([threshold], 0, data["t"].max(), color="gray")
+        # ax.set_xlim(1150, 1153)
+        return pd.concat([resd, resr]).sort_values("t")
     
 class EventProcessing(Processings):
     @staticmethod
@@ -88,6 +107,8 @@ class EventProcessing(Processings):
         def new_f(*args, **kwargs):
             res = f(*args, **kwargs)
             counts = res.count().to_dict()
+            if not "metadata" in res:
+                res["metadata"] = [{}] *len(res.index)
             # print({k: type(v) for k, v in counts.items()})
             return res[[c for c in columns if c in res.columns and (counts[c] > 0)]]
         new_f.__name__ = f.__name__
@@ -160,6 +181,67 @@ class EventProcessing(Processings):
         if not (unique_df["count"] == 1).all():
             raise Exception(f'Name duplication ({dest_name} duplicated)\n{unique_df.loc[unique_df["count"] > 1]}')
         return {v[dest_name]: v for v in event_spec}
+    
+    @staticmethod
+    def summarize(data: pd.DataFrame, precision=0.01, min_score=1.1):
+        data = data.copy()
+        def compute_grp(duration: pd.Series):
+            from scipy.cluster.hierarchy import DisjointSet
+            res=pd.DataFrame()
+            res["duration"]=duration
+            res["id"] = np.arange(len(res.index))
+            sorted_res = res.dropna(subset="duration").sort_values("duration")
+            if len(sorted_res) ==0:
+                return duration.apply(lambda v: "nan")
+            uf = DisjointSet(sorted_res["id"])
+            for i in range(len(sorted_res.index) -1):
+                if sorted_res["duration"].iat[i+1] - sorted_res["duration"].iat[i] < precision:
+                    uf.merge(sorted_res["id"].iat[i+1],sorted_res["id"].iat[i])
+            cluster_df = pd.DataFrame([dict(durations=res["duration"].iloc[list(c)].to_numpy(), ids=list(c)) for i, c in enumerate(uf.subsets())])
+            cluster_df["min"] = cluster_df["durations"].apply(lambda l: np.min(l))
+            cluster_df["max"] = cluster_df["durations"].apply(lambda l: np.max(l))
+            cluster_df["width"] = cluster_df["max"] - cluster_df["min"] 
+            cluster_df["size"] = cluster_df["durations"].apply(lambda l: len(l))
+            cluster_df["isok"] = cluster_df["width"] < 2*precision
+            cluster_df=cluster_df.sort_values("min")
+            cluster_df["separation_bef"] = cluster_df["max"] - cluster_df["min"].shift(1)
+            cluster_df["separation_aft"] = cluster_df["min"].shift(-1) - cluster_df["max"]
+            cluster_df["separation"] = (cluster_df["separation_bef"].fillna(cluster_df["separation_aft"]) + cluster_df["separation_aft"].fillna(cluster_df["separation_bef"])).fillna(1)
+            
+            filtered_cluster_df = cluster_df.loc[cluster_df["isok"]].copy()
+            filtered_cluster_df["score"] = filtered_cluster_df["separation"]/filtered_cluster_df["separation"].max() + filtered_cluster_df["size"]/filtered_cluster_df["size"].sum()
+            kept_clusters = filtered_cluster_df.loc[filtered_cluster_df["score"] > min_score]
+            res["cluster"] = res["id"].map({v:i for i, c in kept_clusters["ids"].items() for v in c})
+
+            def mk_cluster_name(d):
+                min = d.min()
+                max = d.max()
+                if max-min > precision:
+                    name = f'[{min:.3f},{max:.3f}]'
+                else:
+                    center = (max+min)/2
+                    name = f'{center:.3f}±{max-center:.3f}'
+                return np.where(d.isna(), "nan", name)
+            res["cluster_name"] = res.groupby("cluster", dropna=False)["duration"].transform(mk_cluster_name)
+            return res["cluster_name"]
+           
+
+        data["duration_goup"]= data.groupby(["event_name", "n_segments"])["duration"].transform(compute_grp)
+        warning_list = data["metadata"].apply(lambda d: list(d["warnings"].keys()) if not d is None and "warnings"in d else [])
+        all_warnings = set(warning_list.sum())
+
+        def compute_info(grp):
+            warnings = {k: 0 for k in all_warnings}
+            for m in grp["metadata"].values:
+                if m is None: continue
+                if "warnings" in m:
+                    for k in m["warnings"].keys():
+                        if not k in warnings:
+                            warnings[k]=0
+                        warnings[k]+=1
+            return pd.Series(dict(n=len(grp.index)) | {f'warning_{k}': v for k, v in warnings.items()})
+        summary = data.groupby(["event_name", "n_segments", "duration_goup"]).apply(compute_info, include_groups=False).reset_index()
+        return summary
 
 class FiberEventProcessing(EventProcessing):pass
 

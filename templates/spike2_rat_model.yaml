@@ -1,0 +1,44 @@
+discretize:
+  - dest_channel: lick_ev
+    channel: lick
+    method: interupted_sine_wave
+    method_params:
+      sine_fs: 50
+  - duplicate_over:
+      channel_name: ['Sound', 'TTL Lase']
+    dest_channel: '{channel_name}_ev'
+    channel: '{channel_name}'
+    method: analog_to_binary
+    method_params:
+      threshold_rel_max: 0.5
+
+processing:
+  - duplicate_over:
+      channel_name: ['.*']
+    event_name: '{channel_name}'
+    method: 'input_binary_wave'
+    method_params:
+      filter_expr: 'channel_name=="{channel_name}"'
+      state_expr: 'State==1'
+
+display:
+  rename:
+    PAD_P: PAD_left
+    PAD_V: PAD_right
+    L1: LEVER_left
+    L2: LEVER_right
+  summary:
+    counters:
+      - name: "LeverCue"
+        method: "count_groups"
+        method_params:
+          cut: "ASND"
+          where: 
+            - 'TTLP3.nsegments==1'
+            - 'LEVER_left.n > 0'
+            - 'LEVER_right.n ==0 '
+
+        
+
+
+    

@@ -1,0 +1,20 @@
+name: das
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - ipykernel
+  - numpy
+  - pandas
+  - xarray
+  - itables
+  - jupyterlab
+  - ipywidgets
+  - notebook
+  - flox
+  - scipy
+  - scikit-learn
+  - seaborn
+  - matplotlib
+  - das

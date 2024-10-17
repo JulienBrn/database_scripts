@@ -1,0 +1,63 @@
+
+global_variables:
+  date_fct: 'today'
+  base_folder: '/home/julienb/Documents/database_scripts/'
+  this_run_config: 'all_event_handling'
+
+
+scans:
+  - polydatascan:
+      - scan_folder: '{base_folder}/test_data'
+      - force_folder_rescan: True 
+      - files:
+        dat_file_regex: '.*\.dat'
+        task_file_regex: '.*\.xls'
+        config_file_regex: '.*/polydat_file_to_events_config(\s*--.*--\s*)?\.yaml'
+      - grouping: 
+        - method: 'first_common_parent_folder'
+        - incomplete: 'raise' 
+        - multiple:
+          - dat_file: "duplicate_others"
+          - _ : "raise"
+      - reload_on_group_order_change: True
+
+
+runs: 
+  - duplicate_over:
+      - existing_tables: polydatascan
+      - new_tables: []
+      - variables:
+        - dat_file
+        - task_file
+        - config_file
+      - filters: []
+    script: "polydat_file_to_events.ipynb"
+    params:
+      dat_path: '{dat_file}'
+      task_path: '{task_file}'
+      config_path: '{config_file}'
+      dest_path: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events_data'
+    prepare_only: False
+    html_script_export: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events.html'
+    run_group_order: 1
+  - duplicate_over:
+      - existing_tables: polydatascan
+      - new_tables: []
+      - variables:
+        - dat_file
+        - task_file
+        - config_file
+      - filters: []
+    script: "script2.ipynb"
+    params:
+      dat_path: '{dat_file}'
+      task_path: '{task_file}'
+      config_path: '{config_file}'
+      dest_path: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events_data'
+    prepare_only: False
+    html_script_export: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events.html'
+    run_group_order: 2
+
+additional:
+  html_run_export: '{base_folder}/runs/run_{this_run_config}/polydat_file_to_events'
+      
