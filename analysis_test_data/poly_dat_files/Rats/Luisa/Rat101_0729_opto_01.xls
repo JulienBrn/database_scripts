@@ -1,0 +1,79 @@
+20000_MTTps av tout(ms):																													
+Tps max(mn):																													
+Pel/Inj max:																													
+Cage Yoked:																													
+OffsetFz(ms):2000																													
+Tps injection(s):																													
+Remarque:																													
+#TOUCH
+1;0;0;1000;1000
+#FTOUCH
+DEB
+	T1	T2	T3	T4	LED1(1,2)	LED2(1,3)	LED3(1,4)	L1(2,1)	L2(2,2)	LK1(5,1)	LK2(5,2)	RD(6,11)	ASND(6,20)	PAD(6,22)	STR1(13,1)	STR2(13,2)	TTLP1(15,1)	TTLP2(15,2)	TTLP3(15,3)	TTLP4(15,4)	TTLP5(15,5)	TTLP6(15,6)	TTLP7(15,7)	TTLP8(15,8)	NEXT1	NEXT2	NEXT3	CT1	CT2
+
+1	10																								!ti(36)				
+2	_essais				!on	!on	!on																		PAD_L=1	L1_L=1(28)	L2_L=1(26)		
+3	70				!on	!on	!on																		PAD_L=0(2)	!ti			
+4	100						on																		PAD_L=0(2)	!ti			
+5	400-1400						on																		PAD_L=0(2)	!ti			
+6	20																								CTE=1.!TI(40)	CTE=2.!TI(12)	CTE=3.!TI(33)	CTT+1	
+7	30000	_RT			on(50)		!on						on(50,1,1,40,1000)				ON(100,1,1)	on(40)	ON(50,1,1)						PAD_P=0	L2_L=1(29)	!ti(23)	CTC+1	
+8	20000_MT	_RT1																			on(40)				L1_L=1	L2_L=1(29)	!ti(27)		
+9	200	_MT1			!on																	on(40)			!ti				
+10	300																								!ti				
+11	300									on(2)															LK1_P=0.!ti.LK1_V=0(17)				CTX+1
+12	30000	_RT			on(50)		!on						on(50,1,1,40,5000)				ON(100,1,1)	on(100)	ON(50,50,2)						PAD_P=0	L2_L=1(30)	!ti(24)	CTC+1	
+13	20000_MT	_RT2																			on(100)				L1_L=1	L2_L=1(30)	!ti(25)		
+14	200	_MT2			!on																	on(100)			!ti				
+15	300																								!ti				
+16	300									on(2)															LK1_P=0.!ti.LK1_V=0				CTY+1
+17	3000				!on	!on	!on																		!ti(1)				
+18	2000_erreur	_BadPadL1			on	on	on																		!ti(17)				
+19																													
+20	2000_erreur	_BadPadL2			on	on	on																		!ti(17)				
+21																													
+22	1000				!on	!on	!on																		!ti(2)				
+23	2000_erreur	_CutOfRT1			on	on	on																		!ti(17)			CTO+1	
+24	2000_erreur	_CutOfRT2			on	on	on																		!ti(17)			CTO+1	
+25	2000_erreur	_CutOfMT2			on	on	on																on(300)		!ti(17)			CTO+1	
+26	2000_erreur	_AnticipL2			on	on	on																on(200)		!ti(17)			CTA+1	
+27	2000_erreur	_CutOfMT1			on	on	on																on(300)		!ti(17)			CTI+1	
+28	2000_erreur	_AnticipL1			on	on	on																on(150)		!ti(17)			CTA+1	
+29	2000_erreur	_MT3			on	on	on																on(40)		!ti(17)			CTW+1	
+30	2000_erreur	_MT4			on	on	on																on(100)		!ti(17)			CTZ+1	
+31																													
+32																													
+33	1000				!on	!on	!on						on(300,1,1,40,wn)		ON(150)	ON(300,50,1)	ON(100,1,1)	on(150)	ON(300,50,1)						L1_L=1+L2_L=1(27)	!ti		CTU+1	
+34	300				!on	!on	!on			on(2)												ON(150)			LK1_P=0.!ti.LK1_V=0(17)			CTS+1	
+35																													
+36	0-100	15	75																						!TJ.TK.!TI	!TJ.!TK.!TI(38)	!TI.TJ.TK(39)		
+37	10	_L1trial																							!ti(2)			CTE=1	
+38	10	_L2trial																							!ti(2)			CTE=2	
+39	10	_NoGo																							!ti(2)			CTE=3	
+40	0-21	8																							!TJ.TI(7)	!TJ.!TI	PAD_L=0(2)		
+41	30000	_RT			on(50)		!on						on(50,1,1,40,1000)				ON(100,1,1)	on(200)	ON(50,1,1)						PAD_P=0	L2_L=1(48)	!ti(47)	CTC+1	
+42	20000_MT	_RT1laser																		ON(1000,1,1)	on(200)			ON(1000,1,1)	L1_L=1	L2_L=1(48)	!ti(49)		
+43	200	_MT1laser																		!on		on(200)		!on	!ti				
+44	300																								!ti				
+45	300									on(2)															LK1_P=0.!ti.LK1_V=0(17)				CTX+1
+46	2000_erreur	_BadPadL1Laser			on	on	on																		!ti(17)				
+47	2000_erreur	_CutOfRT1Laser			on	on	on													!on				!on	!ti(17)			CTO+1	
+48	2000_erreur	_MT3Laser			on	on	on													!on			on(40)	!on	!ti(17)			CTW+1	
+49	2000_erreur	_CutOfMT1Laser			on	on	on													!on			on(300)	!on	!ti(17)			CTI+1	
+50																													
+51																													
+52																													
+53																													
+54																													
+55																													
+56																													
+57																													
+58																													
+59																													
+60																													
+61																													
+62																													
+63																													
+64																													
+65																													
+66																													

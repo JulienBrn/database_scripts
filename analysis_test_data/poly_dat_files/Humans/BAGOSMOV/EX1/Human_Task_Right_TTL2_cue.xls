@@ -1,0 +1,62 @@
+Tps av tout(ms):																									
+Tps max(mn):																									
+Pel/Inj max:																									
+Cage Yoked:																									
+OffsetFz(ms):1000																									
+Tps injection(s):																									
+Remarque:																									
+#TOUCH																									
+"1;0;0;1000;1000"																									
+#FTOUCH																									
+DEB																									
+	T1	T2	T3	T4	LED1(1,2)	LED2(1,3)	LED3(1,4)	L1(2,1)	L2(2,2)	REC(6,8)	RD(6,11)	ASND(6,20)	PAD(6,22)	BGH(6,40)	STR1(13,1)	STR2(13,2)	TTLP1(15,1)	TTLP2(15,2)	TTLP3(15,3)	TTLP4(15,4)	NEXT1	NEXT2	NEXT3	CT1	CT2
+																									
+1	1000																				!T1				
+2										ON				ON(50,1,100,PX)							PAD_L=1				
+3	1000					ON											ON(100)				!T1			CTE=RD_T	
+4	1000					!ON															!T1				
+5	500_1800	_ESSAIS																			CTE=1.!T1(RIGHT)	CTE=2.!T1(LEFT)	CTE>2.!T1	CTT+1	
+6																					CTE=3.!T1(NOGOLEFT)	CTE=4.!T1(NOGORIGHT)			
+7	2000	_RT	_LEFT		ON(50)							ON(50,1950,1,100,500)						ON(50)			PAD_V=0	PAD_P=0(ERREUR)	!T1(OMISSION)		
+8	1500_MT1	_RT1																	ON(100)		L1_L=1(JUSTE)	L2_L=1(ERREUR)	!T1(OMISSION)		
+9																									
+10	2000	_RT	_RIGHT				ON(50)					ON(50,1950,1,100,3000)						ON(50)			PAD_V=0	PAD_P=0(FAUX)	!T1(OMISSION)		
+11	1500_MT2	_RT2																	ON(100)		L2_L=1(VRAI)	L1_L=1(FAUX)	!T1(OMISSION)		
+12																									
+13	3500		_NOGOLEFT		ON(50,100,2)							ON(200,3300,1,60,WN)						ON(50)			!T1.PAD_L=1(CO)	PAD_L=0(INCO)			
+14																									
+15	3500		_NOGORIGHT				ON(50,100,2)					ON(200,3300,1,60,WN)						ON(50)			!T1.PAD_L=1(CO)	PAD_L=0(INCO)			
+16																									
+17																									
+18	1500	_OMISSION			!ON		!ON				ON										PAD_L=1			CTO+1	
+19	500_1800																ON(100)				!T1				
+20	500													ON(0)						ON(50,50,2)	!T1(ITI)				
+21																									
+22	1500	_ERREUR			!ON		!ON				ON								ON(100)		PAD_L=1			CTI+1	
+23	500_1800																ON(100)				!T1				
+24	500													ON(0)						ON(50,50,2)	!T1(ITI)				
+25																									
+26	1500	_FAUX			!ON		!ON				ON									ON(100)	PAD_L=1			CTA+1	
+27	500_1800																ON(100)				!T1				
+28	500													ON(0)						ON(50,50,2)	!T1(ITI)				
+29																									
+30	1500	_JUSTE			!ON		!ON				ON									ON(100)	PAD_L=1			CTC+1	
+31	500_1800																ON(100)				!T1				
+32	500													ON(1)						ON(50,50,2)	!T1(ITI)				
+33																									
+34	1500	_VRAI			!ON		!ON				ON									ON(100)	PAD_L=1			CTZ+1	
+35	500_1800																ON(100)				!T1				
+36	500													ON(1)						ON(50,50,2)	!T1(ITI)				
+37																									
+38	1500	_CO			!ON		!ON				ON										PAD_L=1			CTV+1	
+39	500_1800																ON(100)				!T1				
+40	500													ON(1)						ON(50,50,2)	!T1(ITI)				
+41																									
+42	1500	_INCO			!ON		!ON				ON								ON(100)		PAD_L=1			CTW+1	
+43	500_1800																ON(100)				!T1				
+44	500													ON(0)						ON(50,50,2)	!T1(ITI)				
+45																									
+46	500_1800	_ITI																			!T1.CTT<60(WAIT)	!T1.CTT>=60(50)		CTE=RD_T	
+47		_WAIT																			PAD_L=1(ESSAIS)				
+48																									
+49																									
