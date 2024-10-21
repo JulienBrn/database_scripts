@@ -1,0 +1,17 @@
+variables:
+  base_folder: "/home/julienb/Documents/database_scripts"
+  this_run_config: "test_runconfig_v1"
+
+runs: 
+  - 
+    script: "polydat_file_to_events2.ipynb"
+    imports: ["events_methods.py", "helper.py"]
+    environment: dbscripts
+
+    script_params:
+      dat_path: '/home/julienb/Documents/database_scripts/analysis_test_data/poly_dat_files/Rats/Luisa/Rat101_0729_opto_01/Rat101_0729_opto_01.dat'
+      task_path: '/home/julienb/Documents/database_scripts/analysis_test_data/poly_dat_files/Rats/Luisa/Rat101_0729_opto_01.xls'
+      config_path: '/home/julienb/Documents/database_scripts/templates/poly_rat_model.yaml'
+      dest_path: 'events.tsv'
+    run_folder: '{base_folder}/runs/{this_run_config}/poly'
+    
