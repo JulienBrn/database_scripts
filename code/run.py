@@ -15,5 +15,5 @@ if summary_folder.exists():
     shutil.rmtree(summary_folder)
 summary_folder.mkdir(parents=True)
 shutil.copy(script_folder/"helper.py", summary_folder/"helper.py")
-papermill.execute_notebook(script_folder/"run.ipynb", summary_folder/"run.ipynb", parameters=dict(param_path=str(param_path), script_folder=str(script_folder)), cwd=summary_folder)
+papermill.execute_notebook(script_folder/"run.ipynb", summary_folder/"run.ipynb", parameters=dict(param_path=str(param_path), scripts_folder=str(script_folder)), cwd=summary_folder)
 subprocess.run(f'jupyter nbconvert --to html {summary_folder/"run.ipynb"}', shell=True, check=True)
