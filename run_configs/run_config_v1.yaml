@@ -15,3 +15,4 @@ runs:
       dest_path: 'events.tsv'
     run_folder: '{base_folder}/runs/{this_run_config}/poly'
     
+run_summary_folder: '{base_folder}/runs/{this_run_config}/summary'
