@@ -13,7 +13,7 @@ if "run_summary_folder" in params:
     variables =  params["variables"] if "variables" in params else {}
     summary_folder = Path(helper.replace_vals(params["run_summary_folder"], variables))
 else:
-    summary_folder = Path("~/.dbrun.run.tmp").resolve()
+    summary_folder = Path.home() /".dbrun.run.tmp"
 if summary_folder.exists():
     shutil.rmtree(summary_folder)
 summary_folder.mkdir(parents=True)
