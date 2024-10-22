@@ -114,4 +114,26 @@ def compute_relevant(event_channels_df, config, copy_columns=[], myeval=lambda d
 
 
 
-    
+import uuid
+import json
+class RenderJSON(object):
+    def __init__(self, json_data, expand=25):
+        if isinstance(json_data, dict):
+            self.json_str = json.dumps(json_data)
+        else:
+            self.json_str = json_data
+        self.uuid = str(uuid.uuid4())
+
+    def _ipython_display_(self):
+        from IPython.display import display_javascript, display_html, display
+        script_str = f"""
+            <script src="https://unpkg.com/@alenaksu/json-viewer@2.0.0/dist/json-viewer.bundle.js"></script>
+            <json-viewer id="{self.uuid}">
+            </json-viewer>
+
+            <script>
+                document.getElementById('{self.uuid}').data = JSON.parse('{self.json_str}');
+            </script>
+        """
+
+        display_html(script_str, raw=True)

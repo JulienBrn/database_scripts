@@ -2,6 +2,7 @@ variables:
   base_folder: "/home/julienb/Documents/database_scripts"
   this_run_config: "test_runconfig_v1"
 
+
 runs: 
   - 
     script: "polydat_file_to_events2.ipynb"

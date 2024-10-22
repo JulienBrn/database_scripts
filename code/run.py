@@ -3,6 +3,9 @@ import sys, yaml, shutil
 from pathlib import Path
 import helper
 
+# It is suggested to create the following alias on your system
+#alias dbrun='conda run -n dbscripts python /pathto/run.py'
+
 param_path = Path(sys.argv[1]).resolve()
 script_folder = Path(sys.argv[0]).parent.resolve()
 params = yaml.safe_load(param_path.open("r"))
