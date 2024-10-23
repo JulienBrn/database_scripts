@@ -118,8 +118,8 @@ def compute_relevant(event_channels_df, config, copy_columns=[], myeval=lambda d
 import uuid
 import json, yaml
 class RenderJSON(object):
-    def __init__(self, json_data, expand=25):
-        if isinstance(json_data, dict):
+    def __init__(self, json_data):
+        if isinstance(json_data, dict) or isinstance(json_data, list):
             self.json_str = json.dumps(json_data, indent=2)
             self.yaml_str = yaml.dump(json_data)
         else:
@@ -130,18 +130,17 @@ class RenderJSON(object):
         self.yamlbutton = str(uuid.uuid4())
         self.yaml_data_uuid = str(uuid.uuid4())
         self.jsonbutton = str(uuid.uuid4())
-        
-
-    def _ipython_display_(self):
-        from IPython.display import display_javascript, display_html, display
-        script_str = f"""
+        self.data= json_data
+    def get_fullhtml(self):
+        return f"""
             <script src="https://unpkg.com/@alenaksu/json-viewer@2.0.0/dist/json-viewer.bundle.js"></script>
             <button type="button" id="{self.yamlbutton}">YAML</button>
             <button type="button" id="{self.jsonbutton}">JSON</button>
-            <json-viewer id="{self.uuid}"></json-viewer>
+            <json-viewer id="{self.uuid}" ></json-viewer>
             <script id="{self.json_data_uuid}" type="application/json">{self.json_str}</script>
             <script id="{self.yaml_data_uuid}" type="application/yaml">{self.yaml_str}</script>
             <script>
+                (function (){{
                 const jsontext = document.getElementById('{self.json_data_uuid}').textContent
                 const yamltext = document.getElementById('{self.yaml_data_uuid}').textContent
                 const data = JSON.parse(jsontext)
@@ -170,6 +169,20 @@ class RenderJSON(object):
                   document.body.removeChild(a);
                   window.URL.revokeObjectURL(url);
                 }}); 
+                }})();
             </script>
         """
-        display_html(script_str, raw=True)
+    def get_html(self):
+        self.json_str = json.dumps([self.data])
+        return f"""<json-viewer id="{self.uuid}">{self.json_str}</json-viewer>"""
+
+    def _ipython_display_(self):
+        from IPython.display import display_javascript, display_html, display
+        # style=<style>
+        #     json-viewer {{
+        #     --background-color: white;
+        #     --color: 0d37f6;
+        #     --string-color:pink;
+        #     }}
+        #     </style>
+        display_html(self.get_fullhtml(), raw=True)
