@@ -15,5 +15,16 @@ runs:
       config_path: '/home/julienb/Documents/database_scripts/templates/poly_rat_model.yaml'
       dest_path: 'events.tsv'
     run_folder: '{base_folder}/runs/{this_run_config}/poly'
+
+  # - 
+  #   script: "spike2toxarray.ipynb"
+  #   imports: ["events_methods.py", "helper.py"]
+  #   environment: spike2
+
+  #   script_params:
+  #     smrx_path: '/home/julienb/Documents/database_scripts/analysis_test_data/spike2files/rat101_20240729_opto.smrx'
+  #     config_path: '/home/julienb/Documents/database_scripts/templates/spike2_to_xarray.yaml'
+  #     dest_path: 'spike2data.nc'
+  #   run_folder: '{base_folder}/runs/{this_run_config}/spike2'
     
 run_summary_folder: '{base_folder}/runs/{this_run_config}/summary'

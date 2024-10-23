@@ -171,7 +171,7 @@ class EventProcessing(Processings):
             if "duplicate_over" not in item:
                 item["duplicate_over"] = {}
             from helper import generate_duplicate_table, replace_vals
-            duplication = generate_duplicate_table(item["duplicate_over"], dict(channel_name=channels))
+            duplication = generate_duplicate_table(item["duplicate_over"], dict(channel_name=channels) if not isinstance(channels, dict) else channels)
             for _, row in duplication.iterrows():
                 final_d = replace_vals(item, row.to_dict())
                 del final_d["duplicate_over"]

@@ -1,0 +1,24 @@
+name: spike2
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy
+  - pandas
+  - xarray
+  - itables
+  - jupyterlab
+  - ipywidgets
+  - notebook
+  - flox
+  - scipy
+  - scikit-learn
+  - seaborn
+  - matplotlib
+  - papermill
+  - tqdm
+  - plotly
+  - pip
+  - pip:
+    - sonpy

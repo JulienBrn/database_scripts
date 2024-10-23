@@ -1,0 +1,41 @@
+
+
+processing:
+  - duplicate_over:
+      Adc_channel: ['.*']
+    dest_channel: '{Adc_channel}'
+    method: 'adc_extract'
+    method_params: 
+      channel_name: '{Adc_channel}'
+      dest_file: '{Adc_channel}.nc'
+
+display:
+  - duplicate_over:
+      Adc_channel: ['lick']
+    dest_trace: "all:{Adc_channel}"
+    method: 'continuous_xrarray'
+    method_params: 
+      file: '{Adc_channel}.nc'
+      variable: '{Adc_channel}'
+      secondary_y: False
+      max_numpoints: 1000000
+
+  - duplicate_over:
+      Adc_channel: ['TTL Lase']
+    dest_trace: "all:{Adc_channel}"
+    method: 'continuous_xrarray'
+    method_params: 
+      file: '{Adc_channel}.nc'
+      variable: '{Adc_channel}'
+      secondary_y: True
+      max_numpoints: 1000000
+
+
+
+
+
+
+        
+
+
+    
