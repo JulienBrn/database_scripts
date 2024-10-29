@@ -5,8 +5,8 @@ variables:
 
 runs: 
   - 
-    script: "polydat_file_to_events2.ipynb"
-    imports: ["events_methods.py", "helper.py"]
+    script: "**/polydat_file_to_events2.ipynb"
+    imports: ["**/events_methods.py", "**/helper.py"]
     environment: dbscripts
 
     script_params:
