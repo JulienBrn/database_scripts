@@ -1,7 +1,7 @@
 import papermill, subprocess
-import sys, yaml, shutil
+import sys, yaml, shutil, time
 from pathlib import Path
-import helper
+import general.helper as helper
 
 # It is suggested to create the following alias on your system
 #alias dbrun='conda run -n dbscripts python /pathto/run.py'
@@ -21,7 +21,8 @@ if summary_folder.exists():
 for file in helper_files:
     for f in list(script_folder.glob(file)):
         shutil.copyfile(f, summary_folder/"code"/f.name)
-papermill.execute_notebook(script_folder/"run.ipynb", summary_folder/"code"/"run.ipynb", parameters=dict(param_path=str(param_path), scripts_folder=str(script_folder)), cwd=summary_folder/"code")
+papermill.execute_notebook(script_folder/"run/run.ipynb", summary_folder/"code"/"run.ipynb", parameters=dict(param_path=str(param_path), scripts_folder=str(script_folder)), cwd=summary_folder/"code")
 subprocess.run(f'jupyter nbconvert --to html {summary_folder/"code"/"run.ipynb"}', shell=True, check=True)
 shutil.move(summary_folder/"code"/"run.html", summary_folder/"run.html")
-print(f'file://{summary_folder/"run.html"}')
+
+print(f'Summary: file://{summary_folder/"run.html"}')
