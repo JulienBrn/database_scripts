@@ -1,0 +1,37 @@
+variables:
+  koelinkhash: !hash '{koe_link}'
+
+random_seed: 0
+
+processing:
+  annotations:
+    method: 'from_koe_link'
+    method_params:
+      link: '{koe_link}'
+      audio_folder: !expand_envvars '/media/filer2/T4b/Birds/Songs/Pink7/'
+      download_path: !expand_envvars '/media/filer2/T4b/Birds/koemodels/{koelinkhash}.zip'
+      force_download: False
+
+  # audio_data: Not handled yet
+  #   method: 'wav_file'
+  #   method_params: {}
+  #     
+  # annotation_correction: Not handled yet
+  #   method: 'volume'
+  #   method_params:
+  #     threshold_expr: 'file_volume.max()/2' 
+  merge_data:
+    method: 'blocks'
+    method_params:
+      block_shoulder_duration: 0.1
+  split_data:
+    method: 'percent_split'
+    method_params:
+      train: 0.7
+      val: 0.2
+      test: 0.1
+  exports:
+    - method: 'das_export'
+      method_params:
+        dest_folder: "das_train_dataset.npy"
+  
