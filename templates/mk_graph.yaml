@@ -1,0 +1,26 @@
+
+
+processing:
+  graphs:
+    - method: 'from_poly_task'
+      method_params:
+        task_file: '{task_file}'
+    - method: 'from_poly_dat'
+      method_params:
+        dat_file: '{dat_file}'
+        node_info: 
+          - name: "count"
+            group_expr: 1
+            agg_expr: "group.sum()"
+          - name: "avg_duration"
+            group_expr: 'next_t.max()-t.min()'
+            agg_expr: "group.mean()"
+        edge_info: 
+          - name: "count"
+            group_expr: 1
+            agg_expr: "group.sum()"
+          - name: "avg_duration"
+            group_expr: 'next_t.max()-t.min()'
+            agg_expr: "group.mean()"
+
+
