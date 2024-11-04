@@ -84,7 +84,7 @@ beautifullogger.setup(displayLevel=logging.INFO, logfile=summary_folder/"log.txt
 if sysargs["kernels"]:
     logger.info("Declaring kernels...")
     config_dir = subprocess.run("jupyter --config-dir", shell=True, stdout=subprocess.PIPE, text=True, check=True).stdout.strip()
-    with Path(config_dir)/"jupyter_config.json".open("w") as f:
+    with (Path(config_dir)/"jupyter_config.json").open("w") as f:
         json.dump({
         "CondaKernelSpecManager": {
         "kernelspec_path": "--user"
