@@ -22,3 +22,5 @@ dependencies:
   - papermill
   - tqdm
   - ruamel.yaml
+  - notebook_env 
+  - nb_conda_kernels
