@@ -44,9 +44,43 @@ class ExecutePreprocessorWithCallbacks(nbconvert.preprocessors.ExecutePreprocess
 
 
 def execute_notebook(nb, kernel_name, dest_notebook_file: Path, dest_notebook_html: Path, callbacks=[], cell_callbacks=[]):
+    tee_def=f"""
+class Tee:
+    def __init__(self, *files):
+        self._files = files
+
+    def __del__(self):
+        # don't kill them here!
+        '''
+        if self._file1 != sys.stdout and self._file1 != sys.stderr:
+            self.file1.close()
+        if self._file2 != sys.stdout and self._file2 != sys.stderr:
+            self.file2.close()
+        '''
+
+    def write(self, string):
+        for file in self._files:
+            file.write(string)
+
+    def flush(self):
+        for file in self._files:
+            file.flush()
+"""
+
+    nice_stdout=u'''
+import sys, os
+sys.stdin = Tee(sys.__stdin__, sys.stdin)
+sys.stdout = Tee(sys.__stdout__, sys.stdout)
+sys.stderr = Tee(sys.__stderr__, sys.stderr)
+    ''' 
     ep = ExecutePreprocessorWithCallbacks(timeout=-1, kernel_name=kernel_name)
+    # nb["cells"].append(nbf.v4.new_code_cell(variable_initialization))
+    nb["cells"] = [nbf.v4.new_code_cell(tee_def), nbf.v4.new_code_cell(nice_stdout)] + nb["cells"]
     try:
-        ep.preprocess(nb, {'metadata': {'path': str(dest_notebook_file.parent)}}, callbacks=callbacks, cell_callbacks=cell_callbacks)
+        ep.preprocess(nb, {'metadata': {'path': str(dest_notebook_file.parent)}}, callbacks=callbacks, cell_callbacks=[(i+2, c) for i,c in cell_callbacks])
+    except: raise
+    else:
+        nb["cells"] = nb["cells"][2:]
     finally:
         try:
             with dest_notebook_file.open('w', encoding='utf-8') as f:
@@ -131,6 +165,8 @@ run_df = pd.DataFrame()
 done_runs = pd.DataFrame(columns=["id", "script", "script_params", "run_folder", "imports", "environment", "depends_on"])
 dependency_graph = nx.DiGraph()
 """
+
+
 
 nb["cells"].append(nbf.v4.new_markdown_cell("# Initialization"))
 nb["cells"].append(nbf.v4.new_markdown_cell("## Imports"))
