@@ -1,6 +1,6 @@
 - action: declare_var
-  name: 'base_folder'
-  value: '/home/julienb/Documents/database_scripts'
+  name: 'dbfolder'
+  value: !expand_envvars '$DBFOLDER'
 
 - action: declare_var
   name: 'this_run_config'
@@ -21,10 +21,10 @@
   environment: dbscripts
 
   script_params:
-    config_path: '/home/julienb/Documents/database_scripts/templates/create_train_song.yaml'
+    config_path: '{dbfolder}/templates/create_train_song.yaml'
     variables:
       koe_link: 'https://koe.io.ac.nz/user_data/history/aleblois-2024-10-21_08-57-17_UTC.zip'
-  run_folder: '{base_folder}/runs/{this_run_config}/create_train_song'
+  run_folder: '{dbfolder}/runs/{this_run_config}/create_train_song'
 
 - action: declare_run
   script: "**/das_predict.ipynb"
@@ -34,10 +34,10 @@
   environment: das
 
   script_params:
-    config_path: '/home/julienb/Documents/database_scripts/templates/das_predict.yaml'
+    config_path: '{dbfolder}/templates/das_predict.yaml'
     song_path: '/home/julienb/Documents/rtxi_test_sound/processed_data/Templates_test_Hania.wav'
-    model_path: '{base_folder}/runs/{this_run_config}/das_train/model'
-  run_folder: '{base_folder}/runs/{this_run_config}/das_predict2'
+    model_path: '{dbfolder}/runs/{this_run_config}/das_train/model'
+  run_folder: '{dbfolder}/runs/{this_run_config}/das_predict2'
 
 - action: declare_run
   script: "**/das_train.ipynb"
@@ -47,9 +47,9 @@
   environment: das
 
   script_params:
-    config_path: '/home/julienb/Documents/database_scripts/templates/das_train.yaml'
-    dataset_location: '{base_folder}/runs/{this_run_config}/create_train_song/das_train_dataset.npy'
-  run_folder: '{base_folder}/runs/{this_run_config}/das_train'
+    config_path: '{dbfolder}/templates/das_train.yaml'
+    dataset_location: '{dbfolder}/runs/{this_run_config}/create_train_song/das_train_dataset.npy'
+  run_folder: '{dbfolder}/runs/{this_run_config}/das_train'
 
 - action: display_run
 - action: run
