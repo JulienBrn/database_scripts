@@ -143,7 +143,7 @@ class Context:
         self.variables = {}
         self.tables = {}
         if default_methods=="minimal":
-            self.methods=dict(raw=raw, hash=hash, expand_envvars=expand_envvars)
+            self.methods=dict(raw=raw, hash=hash, expand_envvars=expand_envvars, from_rows=from_rows)
         else:
             self.methods= {}
 
@@ -168,7 +168,7 @@ class Context:
                 if on_undef=="ignore":
                     return {k: self.evaluate(v, on_undef=on_undef) for k,v in value.items()}
                 else:
-                    raise Exception("Unknwon method")
+                    raise Exception(f"Unknown method {method}")
         elif isinstance(value, dict):
             return {k: self.evaluate(v, on_undef=on_undef) for k,v in value.items()}
         elif isinstance(value, list):
@@ -241,7 +241,7 @@ def add_table_context(current: Context, item):
             del current.variables[k]
 
 def get_duplicate_table(ctx: Context, item):
-    if "duplicate_over" in item:
+    if "duplicate_over" in item and item["duplicate_over"]:
         tables = item["duplicate_over"]["tables"]
         if not isinstance(tables, list): tables = [tables]
         join = item["duplicate_over"]["join"] if "join" in item["duplicate_over"] else "auto"
@@ -269,8 +269,7 @@ def handle_duplicate_over(duplication: pd.DataFrame, item):
     items = []
     # print(duplication.to_dict(orient="index"))
     for _, row in duplication.to_dict(orient="index").items():
-        ctx=Context()
-        print(row)
+        ctx=Context(default_methods=None)
         for k,v in row.items():
             ctx.methods["raw"] = raw
             ctx.variables[k] = v
