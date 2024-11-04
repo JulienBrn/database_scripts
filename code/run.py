@@ -83,15 +83,16 @@ beautifullogger.setup(displayLevel=logging.INFO, logfile=summary_folder/"log.txt
 
 if sysargs["kernels"]:
     logger.info("Declaring kernels...")
-    config_dir = subprocess.run("jupyter --config-dir", shell=True, stdout=subprocess.PIPE, text=True, check=True).stdout
-    with Path(config_dir).open("w") as f:
+    config_dir = subprocess.run("jupyter --config-dir", shell=True, stdout=subprocess.PIPE, text=True, check=True).stdout.strip()
+    with Path(config_dir)/"jupyter_config.json".open("w") as f:
         json.dump({
         "CondaKernelSpecManager": {
         "kernelspec_path": "--user"
         }
     }, f)
 
-    subprocess.run("python -m nb_conda_kernels list", shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE, check=True)
+    subprocess.run("python -m nb_conda_kernels list", shell=True, stderr=None, stdout=None, check=True)
+    subprocess.run("jupyter kernelspec list", shell=True, stderr=None, stdout=None, check=True)
 
 logger.info("Creating notebook")
 helper_files = ["**/helper.py", "**/config_adapter.py"]
@@ -172,7 +173,7 @@ def execute_runs(i, cell):
         id = task["id"]
         progress.set_postfix_str(f"running {id}")
         if len(set(task["rec_depends_on"]) - set(already_done)) > 0:
-            raise Exception("Problem")
+            raise Exception(f'Problem {set(task["rec_depends_on"]) - set(already_done)}')
         run_folder = Path(task["run_folder"]+".tmp")
         if run_folder.exists():
             shutil.rmtree(run_folder)
@@ -190,9 +191,9 @@ def execute_runs(i, cell):
             e.add_note(f'While executing task {id}')
             errors.append(e)
             status=f"failed"
-            consequently_failed = [id for t in tasks if id in t["depends_on"]]
+            consequently_failed = [id for t in tasks if id in t["rec_depends_on"]]
             already_done+=consequently_failed
-            left_tasks = [t for t in tasks if not id in t["depends_on"]]
+            left_tasks = [t for t in tasks if not id in t["rec_depends_on"]]
             for cid in consequently_failed:
                 results.append(dict(id=cid, dyn_status=f"fail_dynpred_{id}"))
             tasks = left_tasks

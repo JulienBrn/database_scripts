@@ -23,5 +23,7 @@ dependencies:
   - tqdm
   - ruamel.yaml
   - nb_conda_kernels
+  - networkx
+  - plotly
   - pip:
     - beautifullogger

@@ -1,2 +1,2 @@
 Add to your ~/.zshrc the following alias (adapting the path to run.py). Dont forget to source that file afterwards or reboot.
-alias dbrun='$(conda run -n dbscripts which python) /home/julienb/Documents/database_scripts/code/run.py'
+alias dbrun='conda activate dbscripts; /home/julienb/Documents/database_scripts/code/run.py'
