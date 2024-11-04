@@ -2,6 +2,9 @@ name: das
 channels:
   - conda-forge
   - defaults
+  - ncb
+  - anaconda
+  - nvidia
 dependencies:
   - python=3.11
   - ipykernel
