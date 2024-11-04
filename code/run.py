@@ -71,7 +71,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("pipeline", type=str)
-parser.add_argument("summary_folder", type=str, nargs='?', default="/home/julienb/Documents/dbruns/latest")
+parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path("~/Documents/dbruns/latest").expanduser()))
 parser.add_argument("--kernels", action="store_true")
 sysargs = vars(parser.parse_args())
 summary_folder = Path(sysargs["summary_folder"])
