@@ -105,7 +105,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("pipeline", type=str)
-parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path("~/Documents/dbruns/latest").expanduser()))
+parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path("~/Documents/Other/dbruns/latest").expanduser()))
 parser.add_argument("--kernels", action="store_true")
 sysargs = vars(parser.parse_args())
 summary_folder = Path(sysargs["summary_folder"])
@@ -138,7 +138,7 @@ nb = nbf.v4.new_notebook()
 non_local_imports = """
 from pathlib import Path
 from datetime import datetime
-import yaml, tqdm.auto as tqdm, shutil, subprocess
+import yaml, tqdm.auto as tqdm, shutil, subprocess, json
 import pandas as pd, numpy as np
 import networkx as nx
 import itables
@@ -432,7 +432,7 @@ Fields for action {action_name} do not match specification.
     Missing fields: {list(mismatch.difference(set(action.keys())))}.
     Unknown fields:  {list(mismatch.difference(set(template["required_args"]).union(set(template["optional_args"].keys()), {"action", "duplicate_over"})))}
                          """)
-    item_decl = f'base_item = {str(action)}'
+    item_decl = f'base_item = json.loads("""{json.dumps(str(action), indent=2)}""")'
     duplication_handling = """
 duplicate_table = config_adapter.get_duplicate_table(ctx, base_item)
 unfolded_items = config_adapter.handle_duplicate_over(duplicate_table, base_item)
@@ -458,7 +458,7 @@ def print_cell(i, cell):
     print(dict(index=i) | {k:v if k!="outputs" else len(v) for k,v in cell.items()})
 
 execute_notebook(nb, "python3", summary_folder/'code'/'notebook.ipynb', summary_folder/'notebook.html', cell_callbacks=cell_callbacks)
-print(f"Ouput notebook html: file://{summary_folder/'notebook.html'}")
+print(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
 print("")
 
 # print(cell_callbacks)
