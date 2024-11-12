@@ -78,10 +78,8 @@ sys.stderr = Tee(sys.__stderr__, sys.stderr)
     nb["cells"] = [nbf.v4.new_code_cell(tee_def), nbf.v4.new_code_cell(nice_stdout)] + nb["cells"]
     try:
         ep.preprocess(nb, {'metadata': {'path': str(dest_notebook_file.parent)}}, callbacks=callbacks, cell_callbacks=[(i+2, c) for i,c in cell_callbacks])
-    except: raise
-    else:
-        nb["cells"] = nb["cells"][2:]
     finally:
+        nb["cells"] = nb["cells"][2:]
         try:
             with dest_notebook_file.open('w', encoding='utf-8') as f:
                 nbformat.write(nb, f)
@@ -262,7 +260,7 @@ templates = dict(
 r"""
 items_added = []
 for item in unfolded_items:
-    item = ctx.evaluate(item)
+    item = ctx.evaluate(item, on_undef="ignore")
     if item["name"] in ctx.variables and ctx.variables[item["name"]] != item["value"]:
       raise Exception(f'Variable {item["name"]} already exists')
     ctx.variables[item["name"]] = item["value"]
@@ -281,7 +279,7 @@ display(RenderJSON(dict(added_variables={k: ctx.variables[k] for k in items_adde
 r"""
 tables_added = []
 for item in unfolded_items:
-    item = ctx.evaluate(item)
+    item = ctx.evaluate(item, on_undef="ignore")
     name = item["name"]
     table = item["table"]
     table.style.set_caption(f'Table {name}')
@@ -302,7 +300,7 @@ display(RenderJSON(dict(added_tables=tables_added)))
         tag_triggers=[],
         code=[
 r"""
-new_decl_runs = pd.DataFrame([ctx.evaluate(k) for k in unfolded_items]).drop(columns="action")
+new_decl_runs = pd.DataFrame([ctx.evaluate(k, on_undef="ignore") for k in unfolded_items]).drop(columns="action")
 decl_runs = pd.concat([decl_runs, new_decl_runs], ignore_index=True)
 if decl_runs["id"].duplicated().any():
     raise Exception("All runs must have unique ids")
@@ -340,7 +338,7 @@ for i, node in stratified_nodes:
       if "status" in dependency_graph.nodes[pred]:
         if isinstance(dependency_graph.nodes[pred]["status"], list):
           if not pred in list(decl_runs["id"]):
-            raise Exception("Only already computed status expected here")
+            raise Exception(f'Only already computed status expected here, got {dependency_graph.nodes[pred]["status"]}')
           depends_on+=dependency_graph.nodes[pred]["status"] + [pred]
         elif dependency_graph.nodes[pred]["status"].startswith("fail"):
             depends_on = f"fail_{pred}"
@@ -354,7 +352,7 @@ run_df["script"] = run_df["script"].apply(lambda s: str(helper.singleglob(script
 run_df["imports"] = run_df["imports"].apply(lambda l: [str(helper.singleglob(script_folder, s).resolve()) for s in l])
 run_df["rec_depends_on"] = run_df["id"].apply(lambda id: dependency_graph.nodes[id]["status"])
 run_df["run_group"] = run_df["id"].apply(lambda id: dependency_graph.nodes[id]["run_group"])
-run_df["status"] = run_df["run_folder"].apply(lambda p: "done" if Path(p).exists() else "error" if Path(p + ".tmp").exists() else "todo")
+run_df["status"] = run_df["run_folder"].apply(lambda p: "error" if Path(p + ".tmp").exists() else "done" if Path(p).exists()  else "todo")
 run_df["should_run"] = ((run_df["recompute"] == "always") | (run_df["status"] == "todo") | ((run_df["recompute"] == "on_error") & (run_df["status"] == "error"))) & ~run_df["rec_depends_on"].astype(str).str.startswith("fail")
 run_df["kernel"] = "conda-env-"+run_df["environment"].astype(str)+"-py"
 run_df["initial_index"] = np.arange(len(run_df.index))
@@ -395,7 +393,15 @@ result_df = pd.read_json("run_result.json")
 result_df = run_df.merge(result_df, on="id", how="left")
 done_runs=pd.concat([done_runs, result_df])
 run_df = run_df.iloc[0:0, :]
+decl_runs = decl_runs.iloc[0:0, :]
 display(result_df)
+""",
+r"""
+for row in result_df.to_dict(orient="index").values():
+  if not pd.isna(row["dyn_status"]):
+    dependency_graph.nodes[row["id"]]["status"] = row["dyn_status"]
+  elif row["status"]=="done":
+    dependency_graph.nodes[row["id"]]["status"] = "already_computed"
 """,
         ],
     ),
@@ -432,7 +438,7 @@ Fields for action {action_name} do not match specification.
     Missing fields: {list(mismatch.difference(set(action.keys())))}.
     Unknown fields:  {list(mismatch.difference(set(template["required_args"]).union(set(template["optional_args"].keys()), {"action", "duplicate_over"})))}
                          """)
-    item_decl = f'base_item = json.loads("""{json.dumps(str(action), indent=2)}""")'
+    item_decl = f'base_item = json.loads(r"""{json.dumps(action, indent=2)}""")'
     duplication_handling = """
 duplicate_table = config_adapter.get_duplicate_table(ctx, base_item)
 unfolded_items = config_adapter.handle_duplicate_over(duplicate_table, base_item)

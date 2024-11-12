@@ -1,0 +1,6 @@
+processing:
+  download:
+    location: 
+    store_path: 
+  merge:
+    song_folder:

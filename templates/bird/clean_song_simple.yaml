@@ -1,0 +1,20 @@
+processing:
+  load:
+    method: "wav"
+    method_params: {}
+  filter:
+    method: "butter"
+    method_params:
+      min_freq: 200
+      max_freq: 8000
+      order: 3
+  resample:
+    method: interpolation
+    method_params:
+      out_fs_expr: "song_fs.round()" #fs for wav files should be integer
+  dump:
+    method: "wav"
+    method_params: 
+      dtype: int16
+    
+  

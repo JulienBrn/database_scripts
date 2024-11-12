@@ -1,0 +1,9 @@
+volume:
+  window_duration: 0.005
+  window_type: 'hanning'
+  approx_out_fs: 1000
+spectrogram:
+  nfft: 512
+  window_type: 'hanning'
+  hop: 128
+  f_bounds: [200, 8000]

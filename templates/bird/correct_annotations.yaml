@@ -1,0 +1,7 @@
+processing:
+  volume:
+    window_duration: 0.005
+    window_type: 'hanning'
+    approx_out_fs: 1000
+  correction_limits: [-0.020, 0.020]
+    

@@ -23,4 +23,8 @@ dependencies:
   - das #Note that there is a bug with pickling for npy dirs attributes. Check that numpy > 1.26 and maybe modify hdf5io np.object to object...
   - papermill
   - ruamel.yaml
+  - itables
+  - pip
+  - pip:
+    - bottleneck
 

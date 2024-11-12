@@ -83,11 +83,12 @@ def expand_envvars(ctx, value):
     return os.path.expandvars(str(ctx.evaluate(value)))
 
 def find_files(ctx, params):
-    if set(params.keys()) != {"column_name", "base_folder"}:
+    if set(params.keys()) != {"column_name", "base_folder", "pattern"}:
         raise Exception(f"find_files param problem {set(params.keys())}")
-    base_folder = Path(ctx.evaluate(params["base_folder"]))
-    files = [str(f.resolve()) for f in base_folder.glob("**/*")]
-    return pd.Series(files, name=ctx.evaluate(params["column_name"])).to_frame().reset_index(drop=True)
+    params = ctx.evaluate(params)
+    base_folder = Path(params["base_folder"])
+    files = [str(f.resolve()) for f in base_folder.glob(params["pattern"])]
+    return pd.Series(files, name=params["column_name"]).to_frame().reset_index(drop=True)
 
 def regex_filter(ctx, params):
     if set(params.keys()) != {"table", "column_name", "pattern"}:
@@ -111,6 +112,16 @@ def hash(ctx, params: str):
     m.update(params.encode("utf-8"))
     return m.hexdigest()[:20]
 
+def read_csv(ctx, params):
+    params = ctx.evaluate(params)
+    df= pd.read_csv(params["file"], **{k:v for k,v in params.items() if k!="file"})
+    print(df)
+    return df
+
+def column_to_list(ctx, params):
+    params = ctx.evaluate(params)
+    return ctx.tables[params["table"]][params["column"]].to_list()
+
 def longest_prefix_join(ctx, params):
     start_column = ctx.evaluate(params["start_table"]["column"])
     start_table = ctx.tables[ctx.evaluate(params["start_table"]["name"])].sort_values(start_column)
@@ -132,8 +143,32 @@ def longest_prefix_join(ctx, params):
         start_table = start_table.merge(other_table, on=other_column, how="left")
     return start_table.drop(columns=["n_left", "n_right", "left_match", "right_match"])
         
+def add_columns(ctx, params):
+    params = ctx.evaluate(params)
+    table = ctx.tables[params["initial_table"]].copy()
+    for col in params["new_columns"]:
+        table[col["name"]] = col["value"]
+    return table
 
+def extract_stem(ctx, params):
+    params = ctx.evaluate(params)
+    table = ctx.tables[params["table"]]
+    return table[params["column"]].apply(lambda p: Path(p).stem)
 
+def python_eval(ctx, code):
+    import helper
+    loc = ctx.variables | ctx.tables
+    res = {}
+    exec(code, dict(singleglob=helper.singleglob, Path=Path, pd=pd) | loc, res)
+    res = res["res"]
+    return res
+
+def table_to_json(ctx, params):
+    params = ctx.evaluate(params)
+    df = ctx.tables[params["table_name"]]
+    if "columns" in params:
+        df = df[params["columns"]]
+    return list(df.to_dict(orient="index").values())
 
 class Context:
     variables: Dict[str, Any]
@@ -143,7 +178,10 @@ class Context:
         self.variables = {}
         self.tables = {}
         if default_methods=="minimal":
-            self.methods=dict(raw=raw, hash=hash, expand_envvars=expand_envvars, from_rows=from_rows)
+            self.methods=dict(
+                raw=raw, hash=hash, expand_envvars=expand_envvars, python_eval=python_eval,
+                from_rows=from_rows, add_columns=add_columns, read_csv=read_csv, column_to_list=column_to_list, table_to_json=table_to_json,
+                extract_stem=extract_stem, file_scan=find_files)
         else:
             self.methods= {}
 

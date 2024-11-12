@@ -1,0 +1,116 @@
+- action: declare_var
+  name: 'dbfolder'
+  value: !expand_envvars '$DBFOLDER'
+
+- action: declare_table
+  name: songs
+  table: !python_eval |
+    wav_files = list(Path('/home/julienb/Documents/Data/Birds/Pink7/').glob('**/*.wav'))
+    res = pd.DataFrame()
+    res['song_path'] = [str(f.resolve()) for f in wav_files]
+    res['song_stem'] = [f.stem for f in wav_files]
+
+- action: declare_run
+  duplicate_over:
+    tables: [songs]
+    variables: ["song_stem", "song_path"]
+  script: "**/clean_song.ipynb"
+  id: "song_clean_{song_stem}"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: dbscripts
+
+  script_params:
+    config_path: '{dbfolder}/templates/bird/clean_song_simple.yaml'
+    song_path: '{song_path}'
+  run_folder: '{dbfolder}/runs/song_project/clean_song/{song_stem}'
+
+
+- action: declare_run
+  script: "**/get_koe_annotations.ipynb"
+  id: "get_koe_annotations"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: dbscripts
+  # recompute: "always"
+
+  script_params:
+    koe_link: 'https://koe.io.ac.nz/user_data/history/aleblois-2024-10-21_08-57-17_UTC.zip'
+    annot_filename_template: !raw '{filestem}_annotations.csv'
+    file_table_filename: 'file_table.tsv'
+  run_folder: '{dbfolder}/runs/song_project/koe_annotations'
+
+- action: display_run
+- action: run
+
+- action: declare_table
+  name: annotations
+  table: !python_eval |
+    df = pd.read_csv(f'{dbfolder}/runs/song_project/koe_annotations/file_table.tsv', sep='\t')
+    df['annotation_path'] = f'{dbfolder}/runs/song_project/koe_annotations/'+df['annotation_filename']
+    df['audio_path'] = df['audio_filename'].apply(lambda p: str(singleglob(Path(f'{dbfolder}/runs/song_project/clean_song/{p}'), '**/*.wav').resolve()))
+    res = df[['annotation_path', 'audio_path']]
+
+- action: declare_run
+  script: "**/create_train_song.ipynb"
+  id: "create_train_song"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: dbscripts
+  depends_on: [get_koe_annotations]
+
+  script_params:
+    files: !table_to_json {table_name: "annotations", columns: ["audio_path", "annotation_path"]}
+    config_path: '{dbfolder}/templates/bird/create_train_song.yaml'
+    out_annotations: 'annotations.csv'
+    out_song: 'song.wav'
+  run_folder: '{dbfolder}/runs/song_project/create_train_song'
+
+- action: declare_run
+  script: "**/correct_annotations.ipynb"
+  id: "correct_annotations"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: dbscripts
+  depends_on: ["create_train_song"]
+  # recompute: "always"
+
+  script_params:
+    audio_path: '{dbfolder}/runs/song_project/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/song_project/create_train_song/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/correct_annotations.yaml'
+    out_annotations: 'annotations.csv'
+  run_folder: '{dbfolder}/runs/song_project/correct_annotations'
+
+- action: declare_run
+  script: "**/display_song.ipynb"
+  id: "display_training_song"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: dbscripts
+  depends_on: ["create_train_song", "correct_annotations"]
+  recompute: "always"
+
+  script_params:
+    audio_path: '{dbfolder}/runs/song_project/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/song_project/correct_annotations/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/display_song.yaml'
+    syb_annotations: [goal, source_audio, file, block, source_start]
+    other_bounds: [{start: uncorrected_start, end: uncorrected_end}]
+    
+  run_folder: '{dbfolder}/runs/song_project/display_training_song'
+
+
+- action: declare_run
+  script: "**/das_train.ipynb"
+  id: "das_train"
+  imports: ["**/config_adapter.py", "**/helper.py"]
+  environment: das
+  depends_on: ["create_train_song", "correct_annotations"]
+  # recompute: "always"
+
+  script_params:
+    audio_path: '{dbfolder}/runs/song_project/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/song_project/create_train_song/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/das_train.yaml'
+    # out_annotations: 'annotations.csv'
+  run_folder: '{dbfolder}/runs/song_project/das_train'
+
+
+- action: display_run
+- action: run

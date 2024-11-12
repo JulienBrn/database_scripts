@@ -1,0 +1,28 @@
+processing:
+  preprocess:
+    - method: bandpass
+      method_params:
+        - low_limit: 200
+        - high_limit: 8000
+    - method: downsample
+      method_params:
+        new_fs_expr: 'original_fs'
+  exports:
+    - filename: 'song.wav'
+      method: wav_export
+      method_params: {}
+    - filename: 'volume.nc'
+      method: volume_export
+      method_params:
+        window_duration: 0.005
+        window_type: 'hanning'
+        out_fs: 'song_fs'
+    - filename: 'spectrogram.nc'
+      method: spectrogram_export
+      method_params:
+        window_duration: 0.005
+        window_type: 'hanning'
+        out_fs: 'song_fs'
+        low_f_limit: 200
+        high_f_limit: 8000
+      

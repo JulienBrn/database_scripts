@@ -1,0 +1,8 @@
+random_seed: 0
+
+processing:
+  block_shoulder_duration: 0.1
+  split:
+    train: 0.7
+    val: 0.2
+    test: 0.1
