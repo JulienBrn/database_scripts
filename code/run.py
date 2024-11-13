@@ -143,7 +143,7 @@ import itables
 """
 local_imports = """
 import helper
-from helper import RenderJSON
+from helper import RenderJSON, singleglob
 import config_adapter
 """
 itables_configuration = """
@@ -164,6 +164,13 @@ done_runs = pd.DataFrame(columns=["id", "script", "script_params", "run_folder",
 dependency_graph = nx.DiGraph()
 """
 
+declare_run_info = """
+script_descriptions = pd.read_excel(script_folder/"../descriptions/actions.xlsx", sheet_name="declare_run").fillna("")
+script_descriptions["helper_scripts_pattern"] = script_descriptions["helper_scripts_pattern"].apply(lambda l: [p.strip() for p in l.split(',')])
+script_descriptions["script_required_params"] = script_descriptions["script_required_params"].apply(lambda l: [s.strip() for s in l.split(',')])
+script_descriptions["script_optional_params"] = script_descriptions["script_optional_params"].apply(lambda l: [s.strip() for s in l.split(',')])
+script_descriptions
+"""
 
 
 nb["cells"].append(nbf.v4.new_markdown_cell("# Initialization"))
@@ -174,6 +181,8 @@ nb["cells"].append(nbf.v4.new_markdown_cell("## Configuration"))
 nb["cells"].append(nbf.v4.new_code_cell(itables_configuration))
 nb["cells"].append(nbf.v4.new_markdown_cell("## Variable initialization"))
 nb["cells"].append(nbf.v4.new_code_cell(variable_initialization))
+nb["cells"].append(nbf.v4.new_markdown_cell("## Declare run info"))
+nb["cells"].append(nbf.v4.new_code_cell(declare_run_info))
 
 action_list = config_adapter.load(sysargs["pipeline"])
 
@@ -294,13 +303,32 @@ display(RenderJSON(dict(added_tables=tables_added)))
     ),
     declare_run=dict(
         required_args=["id", "script", "script_params", "run_folder"],
-        optional_args = {"imports": [], "environment": "dbscripts", "depends_on": [], "recompute": "on_error", "metadata":{}},
+        optional_args = {"imports": "_auto_", "environment": "_auto_", "depends_on": [], "recompute": "on_error", "metadata":{}},
         callbacks=[],
         update_tags=dict(declarations_changed=True),
         tag_triggers=[],
         code=[
 r"""
 new_decl_runs = pd.DataFrame([ctx.evaluate(k, on_undef="ignore") for k in unfolded_items]).drop(columns="action")
+tmp = new_decl_runs.merge(script_descriptions, how="left", on="script", indicator="_has_info")
+unmatched_scripts = tmp[tmp["_has_info"]!= "both"]["script"].drop_duplicates().to_list()
+if len(unmatched_scripts) >0:
+    print(f'The following scripts where not matched {unmatched_scripts}')
+tmp["script"] = np.where(tmp["_has_info"] == "both", tmp["script_path_pattern"], tmp["script"])
+for col, dcol in [("environment", "conda_env"), ("imports", "helper_scripts_pattern")]:
+  if ((tmp[col] == "_auto_") & (tmp["_has_info"] != "both")).any():
+    raise Exception(f'Automatic parameter detection for column {col} not available as script not found in excel sheet')
+  tmp[col] = np.where(tmp[col] == "_auto_", tmp[dcol], tmp[col])
+def check_params(d, req, opt, script):
+  mismatch = set(req).symmetric_difference(set(req)) - set(opt)
+  if len(mismatch) > 0:
+    raise Exception(f'''
+    Params for script {script} do not match specification.
+    Missing fields: {list(mismatch.difference(set(req)))}.
+    Unknown fields:  {list(mismatch.difference(set(d.keys())))}
+''')
+tmp.apply(lambda row: check_params(row["script_params"], row["script_required_params"], row["script_optional_params"], row["script"]) if row["_has_info"]=="both" else None, axis=1)
+new_decl_runs = tmp[new_decl_runs.columns]
 decl_runs = pd.concat([decl_runs, new_decl_runs], ignore_index=True)
 if decl_runs["id"].duplicated().any():
     raise Exception("All runs must have unique ids")

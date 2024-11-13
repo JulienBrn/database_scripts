@@ -1,4 +1,4 @@
 das_train_params:
-  nb_epoch: 20
+  nb_epoch: 500
 
   

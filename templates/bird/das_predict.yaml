@@ -1,0 +1,4 @@
+das_predict_params:
+  segment_minlen: 0.010
+  segment_fillgap: 0.002
+  

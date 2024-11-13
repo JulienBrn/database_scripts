@@ -1,3 +1,6 @@
+data_selection:
+  min_t: 0
+  max_t: 50
 volume:
   window_duration: 0.005
   window_type: 'hanning'
