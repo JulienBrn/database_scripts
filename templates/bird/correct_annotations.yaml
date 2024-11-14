@@ -3,5 +3,9 @@ processing:
     window_duration: 0.005
     window_type: 'hanning'
     approx_out_fs: 1000
+    scale: "linear" #Or log
+  method: "threshold" #One of ["threshold", ""]
+  method_params: 
+    threshold_expr: 'volume.quantile(0.7)*3'
   correction_limits: [-0.020, 0.020]
     
