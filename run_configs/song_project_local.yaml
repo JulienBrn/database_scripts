@@ -2,14 +2,13 @@
   name: 'dbfolder'
   value: !expand_envvars '$DBFOLDER'
 
-
 - action: declare_var
   name: 'source_song_folder'
-  value: !expand_envvars '$FILER/T4b/Birds/Songs/Pink7'
+  value: '/home/julienb/Documents/Data/Birds/Pink7'
 
 - action: declare_var
-  name: 'pipeline_folder'
-  value: !expand_envvars '$FILER/T4b/Birds/song_project'
+  name: 'pipeline_name'
+  value: 'song_project2'
 
 - action: declare_table
   name: songs
@@ -29,7 +28,7 @@
   script_params:
     config_path: '{dbfolder}/templates/bird/clean_song_simple.yaml'
     song_path: '{song_path}'
-  run_folder: '{pipeline_folder}/clean_song/{song_stem}'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}'
 
 
 - action: declare_run
@@ -40,7 +39,7 @@
     koe_link: 'https://koe.io.ac.nz/user_data/history/aleblois-2024-10-21_08-57-17_UTC.zip'
     annot_filename_template: !raw '{filestem}_annotations.csv'
     file_table_filename: 'file_table.tsv'
-  run_folder: '{pipeline_folder}/koe_annotations'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/koe_annotations'
 
 - action: display_run
 - action: run
@@ -48,9 +47,9 @@
 - action: declare_table
   name: annotations
   table: !python_eval |
-    df = pd.read_csv(f'{pipeline_folder}/koe_annotations/file_table.tsv', sep='\t')
-    df['annotation_path'] = f'{pipeline_folder}/koe_annotations/'+df['annotation_filename']
-    df['audio_path'] = df['audio_filename'].apply(lambda p: str(singleglob(Path(f'{pipeline_folder}/clean_song/{p}'), '**/*.wav').resolve()))
+    df = pd.read_csv(f'{dbfolder}/runs/{pipeline_name}/koe_annotations/file_table.tsv', sep='\t')
+    df['annotation_path'] = f'{dbfolder}/runs/{pipeline_name}/koe_annotations/'+df['annotation_filename']
+    df['audio_path'] = df['audio_filename'].apply(lambda p: str(singleglob(Path(f'{dbfolder}/runs/{pipeline_name}/clean_song/{p}'), '**/*.wav').resolve()))
     res = df[['annotation_path', 'audio_path']]
 
 - action: declare_run
@@ -63,7 +62,7 @@
     config_path: '{dbfolder}/templates/bird/create_train_song.yaml'
     out_annotations: 'annotations.csv'
     out_song: 'song.wav'
-  run_folder: '{pipeline_folder}/create_train_song'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/create_train_song'
 
 - action: declare_run
   script: "correct_annotations"
@@ -71,11 +70,11 @@
   depends_on: ["create_train_song"]
 
   script_params:
-    audio_path: '{pipeline_folder}/create_train_song/song.wav'
-    annotation_path: '{pipeline_folder}/create_train_song/annotations.csv'
+    audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/annotations.csv'
     config_path: '{dbfolder}/templates/bird/correct_annotations.yaml'
     out_annotations: 'annotations.csv'
-  run_folder: '{pipeline_folder}/correct_annotations'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/correct_annotations'
 
 - action: declare_run
   script: "display_song"
@@ -83,13 +82,13 @@
   depends_on: ["create_train_song", "correct_annotations"]
 
   script_params:
-    audio_path: '{pipeline_folder}/create_train_song/song.wav'
-    annotation_path: '{pipeline_folder}/correct_annotations/annotations.csv'
+    audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/correct_annotations/annotations.csv'
     config_path: '{dbfolder}/templates/bird/display_song.yaml'
     syb_annotations: [goal, source_audio, file, block, source_start]
     other_bounds: [{start: uncorrected_start, end: uncorrected_end}]
     
-  run_folder: '{pipeline_folder}/display_training_song'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/display_training_song'
 
 
 - action: declare_run
@@ -99,10 +98,10 @@
   # recompute: "always"
 
   script_params:
-    audio_path: '{pipeline_folder}/create_train_song/song.wav'
-    annotation_path: '{pipeline_folder}/create_train_song/annotations.csv'
+    audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/annotations.csv'
     config_path: '{dbfolder}/templates/bird/das_train.yaml'
-  run_folder: '{pipeline_folder}/das_train'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/das_train'
 
 - action: declare_run
   duplicate_over:
@@ -113,11 +112,11 @@
   depends_on: ["das_train"]
 
   script_params:
-    audio_path: '{pipeline_folder}/clean_song/{song_stem}/{song_stem}.wav'
-    model_path: '{pipeline_folder}/das_train/model/das_model.h5'
+    audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
+    model_path: '{dbfolder}/runs/{pipeline_name}/das_train/model/das_model.h5'
     config_path: '{dbfolder}/templates/bird/das_predict.yaml'
     out_annotations: 'annotations.csv'
-  run_folder: '{pipeline_folder}/das_predict/{song_stem}'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}'
 
 - action: declare_run
   duplicate_over:
@@ -128,10 +127,10 @@
   depends_on: ["das_predict_{song_stem}"]
 
   script_params:
-    audio_path: '{pipeline_folder}/clean_song/{song_stem}/{song_stem}.wav'
-    annotation_path: '{pipeline_folder}/das_predict/{song_stem}/annotations.csv'
+    audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}/annotations.csv'
     config_path: '{dbfolder}/templates/bird/display_song.yaml'
-  run_folder: '{pipeline_folder}/display_song/{song_stem}'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/display_song/{song_stem}'
 
 - action: display_run
 - action: run
