@@ -8,4 +8,5 @@ processing:
   method_params: 
     threshold_expr: 'volume.where(~is_in_syb).quantile(0.7)*3'
   correction_limits: [-0.020, 0.020]
-    
+
+display: True
