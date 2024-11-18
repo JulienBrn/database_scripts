@@ -20,13 +20,15 @@ def construct_undef(self, node):
 TagLoader.add_constructor(None, construct_undef)
 
 def load(s):
-    if isinstance(s, str):
-        s = Path(s)
-    if isinstance(s, Path):
-        with s.open("r") as f:
-            return yaml.load(f, Loader=TagLoader)
+    import validators, urllib.request
+    if isinstance(s, str) and validators.url(s):
+        f = urllib.request.urlopen(s) 
+        y = f.read()
     else:
-        return yaml.load(s, Loader=TagLoader)
+        with Path(s).open("r") as f:
+            y =  f.read()
+
+    return yaml.load(y, Loader=TagLoader)
     
 def loads(s):
     return yaml.load(s, Loader=TagLoader)

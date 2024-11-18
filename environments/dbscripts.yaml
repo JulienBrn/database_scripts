@@ -31,3 +31,4 @@ dependencies:
     - pydot
     - graphviz
     - openpyxl
+    - validators
