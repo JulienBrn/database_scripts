@@ -72,66 +72,66 @@
 
   script_params:
     audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
-    annotation_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/annotations.csv'
+    annotation_path: '{create_train_song_run_folder}/annotations.csv'
     config_path: '{dbfolder}/templates/bird/correct_annotations.yaml'
     out_annotations: 'annotations.csv'
   run_folder: '{dbfolder}/runs/{pipeline_name}/correct_annotations'
 
-# - action: declare_run
-#   script: "display_song"
-#   id: "display_training_song"
-#   depends_on: ["create_train_song", "correct_annotations"]
+- action: declare_run
+  script: "display_song"
+  id: "display_training_song"
+  depends_on: ["create_train_song", "correct_annotations"]
 
-#   script_params:
-#     audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
-#     annotation_path: '{dbfolder}/runs/{pipeline_name}/correct_annotations/annotations.csv'
-#     config_path: '{dbfolder}/templates/bird/display_song.yaml'
-#     syb_annotations: [goal, source_audio, file, block, source_start]
-#     other_bounds: [{start: uncorrected_start, end: uncorrected_end}]
+  script_params:
+    audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/correct_annotations/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/display_song.yaml'
+    syb_annotations: [goal, source_audio, file, block, source_start]
+    other_bounds: [{start: uncorrected_start, end: uncorrected_end}]
     
-#   run_folder: '{dbfolder}/runs/{pipeline_name}/display_training_song'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/display_training_song'
 
 
-# - action: declare_run
-#   script: "das_train"
-#   id: "das_train"
-#   depends_on: ["create_train_song", "correct_annotations"]
-#   # recompute: "always"
+- action: declare_run
+  script: "das_train"
+  id: "das_train"
+  depends_on: ["create_train_song", "correct_annotations"]
+  # recompute: "always"
 
-#   script_params:
-#     audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
-#     annotation_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/annotations.csv'
-#     config_path: '{dbfolder}/templates/bird/das_train.yaml'
-#   run_folder: '{dbfolder}/runs/{pipeline_name}/das_train'
+  script_params:
+    audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/das_train.yaml'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/das_train'
 
-# - action: declare_run
-#   duplicate_over:
-#       tables: [songs]
-#       variables: ["song_stem", "song_path"]
-#   script: "das_predict"
-#   id: "das_predict_{song_stem}"
-#   depends_on: ["das_train"]
+- action: declare_run
+  duplicate_over:
+      tables: [songs]
+      variables: ["song_stem", "song_path"]
+  script: "das_predict"
+  id: "das_predict_{song_stem}"
+  depends_on: ["das_train"]
 
-#   script_params:
-#     audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
-#     model_path: '{dbfolder}/runs/{pipeline_name}/das_train/model/das_model.h5'
-#     config_path: '{dbfolder}/templates/bird/das_predict.yaml'
-#     out_annotations: 'annotations.csv'
-#   run_folder: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}'
+  script_params:
+    audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
+    model_path: '{dbfolder}/runs/{pipeline_name}/das_train/model/das_model.h5'
+    config_path: '{dbfolder}/templates/bird/das_predict.yaml'
+    out_annotations: 'annotations.csv'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}'
 
-# - action: declare_run
-#   duplicate_over:
-#       tables: [songs]
-#       variables: ["song_stem", "song_path"]
-#   script: "display_song"
-#   id: "display_song_{song_stem}"
-#   depends_on: ["das_predict_{song_stem}"]
+- action: declare_run
+  duplicate_over:
+      tables: [songs]
+      variables: ["song_stem", "song_path"]
+  script: "display_song"
+  id: "display_song_{song_stem}"
+  depends_on: ["das_predict_{song_stem}"]
 
-#   script_params:
-#     audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
-#     annotation_path: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}/annotations.csv'
-#     config_path: '{dbfolder}/templates/bird/display_song.yaml'
-#   run_folder: '{dbfolder}/runs/{pipeline_name}/display_song/{song_stem}'
+  script_params:
+    audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
+    annotation_path: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}/annotations.csv'
+    config_path: '{dbfolder}/templates/bird/display_song.yaml'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/display_song/{song_stem}'
 
 - action: display_run
 - action: run

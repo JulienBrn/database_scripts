@@ -269,7 +269,7 @@ templates = dict(
 r"""
 items_added = []
 for item in unfolded_items:
-    item = ctx.evaluate(item, on_undef="ignore")
+    item = ctx.evaluate(item)
     if item["name"] in ctx.variables and ctx.variables[item["name"]] != item["value"]:
       raise Exception(f'Variable {item["name"]} already exists')
     ctx.variables[item["name"]] = item["value"]
@@ -288,7 +288,7 @@ display(RenderJSON(dict(added_variables={k: ctx.variables[k] for k in items_adde
 r"""
 tables_added = []
 for item in unfolded_items:
-    item = ctx.evaluate(item, on_undef="ignore")
+    item = ctx.evaluate(item)
     name = item["name"]
     table = item["table"]
     table.style.set_caption(f'Table {name}')
@@ -309,7 +309,7 @@ display(RenderJSON(dict(added_tables=tables_added)))
         tag_triggers=[],
         code=[
 r"""
-new_decl_runs = pd.DataFrame([ctx.evaluate(k, on_undef="ignore") for k in unfolded_items]).drop(columns="action")
+new_decl_runs = pd.DataFrame([ctx.evaluate(k) for k in unfolded_items]).drop(columns="action")
 tmp = new_decl_runs.merge(script_descriptions, how="left", on="script", indicator="_has_info")
 unmatched_scripts = tmp[tmp["_has_info"]!= "both"]["script"].drop_duplicates().to_list()
 if len(unmatched_scripts) >0:
@@ -334,6 +334,8 @@ if decl_runs["id"].duplicated().any():
     raise Exception("All runs must have unique ids")
 if decl_runs["run_folder"].duplicated().any():
     raise Exception("All runs must have a unique run_folder")
+for row in new_decl_runs.to_dict(orient="index").values():
+    ctx.variables[row["id"]+"_run_folder"] = row["run_folder"]
 display(new_decl_runs)
 """,
         ]
