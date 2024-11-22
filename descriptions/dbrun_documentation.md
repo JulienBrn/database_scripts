@@ -1,6 +1,6 @@
 # Goal
 
-Provide a runner for reproducible, self documenting pipelines. The code and configuration files can be accessed on [github](https://github.com/JulienBrn/database_scripts).
+Provide a runner for reproducible, self documenting pipelines. The code and most basic information can be accessed on [github](https://github.com/JulienBrn/database_scripts).
 
 # Usage
 
