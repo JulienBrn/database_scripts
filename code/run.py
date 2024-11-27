@@ -8,7 +8,7 @@ import nbformat as nbf
 import pandas as pd
 import nbconvert, nbformat
 import tqdm.auto as tqdm, logging, beautifullogger
-
+import datetime
 
 logger=logging.getLogger()
 
@@ -103,7 +103,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("pipeline", type=str)
-parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path("~/Documents/Other/dbruns/latest").expanduser()))
+parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path(f"~/Documents/Other/dbruns/{datetime.datetime.now().timestamp()}").expanduser()))
 parser.add_argument("--kernels", action="store_true")
 sysargs = vars(parser.parse_args())
 summary_folder = Path(sysargs["summary_folder"])
