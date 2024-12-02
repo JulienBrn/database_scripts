@@ -68,7 +68,7 @@
   script: "correct_annotations"
   id: "correct_annotations"
   depends_on: ["create_train_song"]
-  recompute: "always"
+  # recompute: "always"
 
   script_params:
     audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
@@ -130,6 +130,7 @@
   script_params:
     audio_path: '{dbfolder}/runs/{pipeline_name}/clean_song/{song_stem}/{song_stem}.wav'
     annotation_path: '{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}/annotations.csv'
+    additional_time_series_paths: [['{dbfolder}/runs/{pipeline_name}/das_predict/{song_stem}/probas.nc', 'proba']]
     config_path: '{dbfolder}/templates/bird/display_song.yaml'
   run_folder: '{dbfolder}/runs/{pipeline_name}/display_song/{song_stem}'
 
