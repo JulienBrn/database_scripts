@@ -1,0 +1,50 @@
+
+
+processing:
+  t_fs: 1000
+  data:
+    - name: volume
+      method: "envellope"
+      method_params:
+        arr_name: "source_signal"
+        window_duration: 0.005
+        window_type: 'hanning'
+    - name: threshold
+      method: "pandas_eval"
+      method_params:
+        expr: 'volume.where(~is_in_syb).quantile(0.7)*2'
+    - name: volume_smoothed
+      method: "sliding_mean"
+      method_params:
+        arr_name: "volume"
+        window_duration: 0.010
+  default_corrections:
+    start:
+      method: "first_all_true" 
+      expr: 'volume > threshold'
+      correction_limits: [-0.010, 0.010]
+    end:
+      method: "first_all_true" 
+      expr: 'volume < threshold'
+      correction_limits: [-0.020, 0.020]
+
+  specific_corrections:
+    start:
+      - transition: [C, A]
+        method: "first_all_true" 
+        expr: 'volume > threshold'
+        correction_limits: [-0.020, 0.020]
+      - transition: [A, D]
+        method: "first_all_true" 
+        expr: 'volume < threshold'
+        correction_limits: [-0.020, 0.020]
+    end: []
+
+display:
+  t_limits: null
+  show_spectrogram: True
+  signals:
+    volume: {dest: plot1}
+    threshold: {dest: plot1}
+    volume_smoothed: {dest: plot1}
+  

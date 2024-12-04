@@ -8,7 +8,7 @@
 
 - action: declare_var
   name: 'pipeline_name'
-  value: 'song_project3'
+  value: 'song_project4'
 
 - action: declare_table
   name: songs
@@ -32,11 +32,11 @@
 
 
 - action: declare_run
-  script: "get_koe_annotations"
+  script: "get_koe_annotations2"
   id: "get_koe_annotations"
 
   script_params:
-    koe_link: 'https://koe.io.ac.nz/user_data/history/aleblois-2024-10-21_08-57-17_UTC.zip'
+    koe_database_zippath: '/home/julienb/Documents/Data/Birds/Pink7/koe.zip'
     annot_filename_template: !raw '{filestem}_annotations.csv'
     file_table_filename: 'file_table.tsv'
   run_folder: '{dbfolder}/runs/{pipeline_name}/koe_annotations'
@@ -65,7 +65,7 @@
   run_folder: '{dbfolder}/runs/{pipeline_name}/create_train_song'
 
 - action: declare_run
-  script: "correct_annotations"
+  script: "correct_annotations2"
   id: "correct_annotations"
   depends_on: ["create_train_song"]
   # recompute: "always"
@@ -73,7 +73,7 @@
   script_params:
     audio_path: '{dbfolder}/runs/{pipeline_name}/create_train_song/song.wav'
     annotation_path: '{create_train_song_run_folder}/annotations.csv'
-    config_path: '{dbfolder}/templates/bird/correct_annotations.yaml'
+    config_path: '{dbfolder}/templates/bird/correct_annotationsv2.yaml'
     out_annotations: 'annotations.csv'
   run_folder: '{dbfolder}/runs/{pipeline_name}/correct_annotations'
 
