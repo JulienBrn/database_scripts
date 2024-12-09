@@ -180,7 +180,8 @@ nb["cells"].append(nbf.v4.new_code_cell(declare_run_info))
 
 action_list = config_adapter.load(sysargs["pipeline"])
 
-
+def stop_exec(i, cell):
+    raise KeyboardInterrupt
 
 
 def display_runs(i, cell):
@@ -200,6 +201,7 @@ def execute_runs(i, cell):
     df = pd.read_json(summary_folder/'code'/"run_desc.json")
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
     logger.info(f'{len(already_done)} results skipped')
+    ignored_df = df.loc[~df["should_run"]]
     df = df.loc[df["should_run"]]
     tasks = list(df.to_dict(orient="index").values())
     progress = tqdm.tqdm(desc="Executing", total=len(tasks))
@@ -241,6 +243,7 @@ def execute_runs(i, cell):
             shutil.move(run_folder, task["run_folder"])
             logger.info(f"Task {id} was a success. Notebook html available at: file://{Path(task['run_folder']).resolve()/'notebook.html'}")
         else:
+            print(errors[-1])
             logger.error(f"Task {id} failed. Notebook html available at: file://{run_folder.resolve()/'notebook.html'}")
         results.append(dict(id=id, dyn_status=status))
         progress.update(1)
@@ -249,10 +252,7 @@ def execute_runs(i, cell):
     results = pd.DataFrame(results, columns=["id", "dyn_status"])
     results.to_json(summary_folder/'code'/'run_result.json')
     
-    for error in errors:
-        print(error)
-
-    print(results)
+    print(pd.concat([ignored_df[["id"]].assign(dyn_status="skipped"), results]))
 
 
 templates = dict(
@@ -297,6 +297,14 @@ for item in unfolded_items:
 display(RenderJSON(dict(added_tables=tables_added)))
 """
         ]
+    ),
+    stop=dict(
+        required_args=[],
+        optional_args = {},
+        callbacks=[(0, stop_exec)],
+        update_tags={},
+        tag_triggers=[],
+        code=[]
     ),
     declare_run=dict(
         required_args=["id", "script", "script_params", "run_folder"],
@@ -516,11 +524,13 @@ def print_cell(i, cell):
 
 try:
     execute_notebook(nb, "python3", summary_folder/'code'/'notebook.ipynb', summary_folder/'notebook.html', cell_callbacks=cell_callbacks)
+    logger.info(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
 except Exception:
-    print("Problem in main notebook execution...")
+    logger.error(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
     raise
-finally:
-    print(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
+except KeyboardInterrupt:
+    logger.info(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
+    
 
 # print(cell_callbacks)
 # with (summary_folder/'code'/'run_notebook.ipynb').open("r") as f:

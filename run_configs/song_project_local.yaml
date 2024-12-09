@@ -94,6 +94,9 @@
     
   run_folder: '{dbfolder}/runs/{pipeline_name}/display_training_song'
 
+- action: display_run
+- action: run
+- action: stop
 
 - action: declare_run
   script: "das_train"
