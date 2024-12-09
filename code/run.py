@@ -95,6 +95,7 @@ sys.stderr = Tee(sys.__stderr__, sys.stderr)
 
 
 
+
 script_folder = Path(sys.argv[0]).parent.resolve()
 
 parser = argparse.ArgumentParser(
@@ -103,15 +104,12 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument("pipeline", type=str)
-parser.add_argument("summary_folder", type=str, nargs='?', default=str(Path(f"~/Documents/Other/dbruns/{datetime.datetime.now().timestamp()}").expanduser()))
+parser.add_argument("summary_folder", type=str, nargs='?', default="default")
 parser.add_argument("--kernels", action="store_true")
 sysargs = vars(parser.parse_args())
-summary_folder = Path(sysargs["summary_folder"])
-if summary_folder.exists():
-    shutil.rmtree(summary_folder)
-(summary_folder/'code').mkdir(exist_ok=True, parents=True)
 
-beautifullogger.setup(displayLevel=logging.INFO, logfile=summary_folder/"log.txt")
+
+beautifullogger.setup(displayLevel=logging.INFO)
 
 if sysargs["kernels"]:
     logger.info("Declaring kernels...")
@@ -127,10 +125,6 @@ if sysargs["kernels"]:
     subprocess.run("jupyter kernelspec list", shell=True, stderr=None, stdout=None, check=True)
 
 logger.info("Creating notebook")
-helper_files = ["**/helper.py", "**/config_adapter.py"]
-for file in helper_files:
-    for f in list(script_folder.glob(file)):
-        shutil.copyfile(f, summary_folder/"code"/f.name)
 
 nb = nbf.v4.new_notebook()
 non_local_imports = """
@@ -245,6 +239,9 @@ def execute_runs(i, cell):
             if Path(task["run_folder"]).exists():
                 shutil.rmtree(Path(task["run_folder"]))
             shutil.move(run_folder, task["run_folder"])
+            logger.info(f"Task {id} was a success. Notebook html available at: file://{Path(task['run_folder']).resolve()/'notebook.html'}")
+        else:
+            logger.error(f"Task {id} failed. Notebook html available at: file://{run_folder.resolve()/'notebook.html'}")
         results.append(dict(id=id, dyn_status=status))
         progress.update(1)
         already_done.append(id)
@@ -309,7 +306,12 @@ display(RenderJSON(dict(added_tables=tables_added)))
         tag_triggers=[],
         code=[
 r"""
-new_decl_runs = pd.DataFrame([ctx.evaluate(k) for k in unfolded_items]).drop(columns="action")
+new_decl_runs = pd.DataFrame([ctx.evaluate(k) for k in unfolded_items])
+if len(new_decl_runs.index) ==0:
+    new_decl_runs = pd.DataFrame([], columns =["id", "script", "script_params", "run_folder", "imports", "environment", "depends_on", "recompute", "metadata"])
+    print(f"WARNING, no runs being declared from {base_item}")
+else:
+    new_decl_runs = new_decl_runs.drop(columns="action")
 tmp = new_decl_runs.merge(script_descriptions, how="left", on="script", indicator="_has_info")
 unmatched_scripts = tmp[tmp["_has_info"]!= "both"]["script"].drop_duplicates().to_list()
 if len(unmatched_scripts) >0:
@@ -441,6 +443,11 @@ nb["cells"].append(nbf.v4.new_markdown_cell("# Processing"))
 cell_callbacks=[]
 update_tags = {}
 i=0
+summary_folder=None
+while action_list[0]["action"] == "set":
+    if "summary_folder" in action_list[0]:
+        summary_folder= Path(config_adapter.Context().evaluate(action_list[0]["summary_folder"]))
+    action_list = action_list[1:]
 while len(action_list) > 0:
     action = action_list[0]
     if isinstance(action, str):
@@ -486,16 +493,34 @@ unfolded_items = config_adapter.handle_duplicate_over(duplicate_table, base_item
 nb["cells"].append(nbf.v4.new_markdown_cell("## End"))   
 # nbf.write(nb, summary_folder/'code'/'run_notebook.ipynb')
 
+logger.info("Adding execution context")
 
+if sysargs["summary_folder"] =="default":
+    if summary_folder is None:
+        summary_folder = Path(f"~/Documents/Other/dbruns/{datetime.datetime.now().timestamp()}").expanduser()
+else:
+    summary_folder = Path(sysargs["summary_folder"])
+if summary_folder.exists():
+    shutil.rmtree(summary_folder)
+(summary_folder/'code').mkdir(exist_ok=True, parents=True)
+
+helper_files = ["**/helper.py", "**/config_adapter.py"]
+for file in helper_files:
+    for f in list(script_folder.glob(file)):
+        shutil.copyfile(f, summary_folder/"code"/f.name)
 
 
 logger.info("Executing notebook")
 def print_cell(i, cell):
     print(dict(index=i) | {k:v if k!="outputs" else len(v) for k,v in cell.items()})
 
-execute_notebook(nb, "python3", summary_folder/'code'/'notebook.ipynb', summary_folder/'notebook.html', cell_callbacks=cell_callbacks)
-print(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
-print("")
+try:
+    execute_notebook(nb, "python3", summary_folder/'code'/'notebook.ipynb', summary_folder/'notebook.html', cell_callbacks=cell_callbacks)
+except Exception:
+    print("Problem in main notebook execution...")
+    raise
+finally:
+    print(f"Ouput notebook html: file://{summary_folder.resolve()/'notebook.html'}")
 
 # print(cell_callbacks)
 # with (summary_folder/'code'/'run_notebook.ipynb').open("r") as f:

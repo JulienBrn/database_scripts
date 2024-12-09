@@ -1,3 +1,6 @@
+- action: set
+  summary_folder: !expand_envvars '$DBFOLDER/runs/song_project5/run_summary'
+
 - action: declare_var
   name: 'dbfolder'
   value: !expand_envvars '$DBFOLDER'
@@ -8,7 +11,7 @@
 
 - action: declare_var
   name: 'pipeline_name'
-  value: 'song_project4'
+  value: 'song_project5'
 
 - action: declare_table
   name: songs
