@@ -224,6 +224,7 @@ def execute_runs(i, cell):
             nb = nbformat.read(f, as_version=4)
         with (run_folder / "params.yaml").open("w") as f:
             yaml.dump(task["script_params"], f)
+        start_time = time.time()
         try:
             execute_notebook(nb, task["kernel"], run_folder/"notebook.ipynb", run_folder/"notebook.html")
             status="sucess"
@@ -238,6 +239,7 @@ def execute_runs(i, cell):
                 results.append(dict(id=cid, dyn_status=f"fail_dynpred_{id}"))
             tasks = left_tasks
             progress.total-= len(consequently_failed)
+        duration = time.time() - start_time
         if status=="sucess":
             if Path(task["run_folder"]).exists():
                 shutil.rmtree(Path(task["run_folder"]))
@@ -246,11 +248,11 @@ def execute_runs(i, cell):
         else:
             print(errors[-1])
             logger.error(f"Task {id} failed. Notebook html available at: file://{run_folder.resolve()/'notebook.html'}")
-        results.append(dict(id=id, dyn_status=status))
+        results.append(dict(id=id, dyn_status=status, duration=duration))
         progress.update(1)
         already_done.append(id)
         tasks = tasks[1:]
-    results = pd.DataFrame(results, columns=["id", "dyn_status"])
+    results = pd.DataFrame(results, columns=["id", "dyn_status", "duration"])
     results.to_json(summary_folder/'code'/'run_result.json')
     print("")
     logger.info("Summary table")
@@ -436,7 +438,7 @@ result_df = run_df.merge(result_df, on="id", how="left")
 done_runs=pd.concat([done_runs, result_df])
 run_df = run_df.iloc[0:0, :]
 decl_runs = decl_runs.iloc[0:0, :]
-col_display_order = ["id", "status", "should_run", "dyn_status", "environment", "depends_on", "rec_depends_on"]
+col_display_order = ["id", "status", "should_run", "dyn_status","duration",  "environment", "depends_on", "rec_depends_on"]
 display(result_df[col_display_order+[col for col in result_df.columns if not col in col_display_order]])
 """,
 r"""
