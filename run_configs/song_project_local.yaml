@@ -44,7 +44,7 @@
     file_table_filename: 'file_table.tsv'
   run_folder: '{dbfolder}/runs/{pipeline_name}/koe_annotations'
 
-- action: display_run
+# - action: display_run
 - action: run
 
 - action: declare_table
@@ -94,9 +94,8 @@
     
   run_folder: '{dbfolder}/runs/{pipeline_name}/display_training_song'
 
-- action: display_run
+# - action: display_run
 - action: run
-- action: stop
 
 - action: declare_run
   script: "das_train"
@@ -140,5 +139,5 @@
     config_path: '{dbfolder}/templates/bird/display_song.yaml'
   run_folder: '{dbfolder}/runs/{pipeline_name}/display_song/{song_stem}'
 
-- action: display_run
+# - action: display_run
 - action: run

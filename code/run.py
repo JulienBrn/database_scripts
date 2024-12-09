@@ -200,18 +200,37 @@ def display_runs(i, cell):
 
 def execute_runs(i, cell):
     df = pd.read_json(summary_folder/'code'/"run_desc.json")
+    n_tasks = len(df.index)
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
     # logger.info(f'{len(already_done)} results skipped')
-    ignored_df = df.loc[~df["should_run"]]
+    import numpy as np
+    ignored_df = df.loc[~df["should_run"]].assign(dyn_status="skipped")
+    ignored_df["notebook"] = ignored_df["run_folder"].apply(lambda p: Path(p)/"notebook.html" if (Path(p)/"notebook.html").exists() else np.nan)
+    def get_metadata(p, val):
+        if (Path(p)/"run_metadata.yaml").exists():
+            with (Path(p)/"run_metadata.yaml").open("r") as f:
+                d = yaml.safe_load(f)
+                if val in d:
+                    return d[val]
+        return np.nan
+    ignored_df["duration"] = ignored_df["run_folder"].apply(lambda p:  get_metadata(p, "run_duration"))
+    ignored_df = ignored_df[["id", "dyn_status", "duration", "notebook"]]
     df = df.loc[df["should_run"]]
     tasks = list(df.to_dict(orient="index").values())
-    progress = tqdm.tqdm(desc="Executing", total=len(tasks), disable=len(tasks)==0)
+    # progress = tqdm.tqdm(desc="Executing", total=len(tasks), disable=len(tasks)==0)
     results=[]
     errors = []
+    print("")
     while len(tasks) > 0:
         task = tasks[0]
         id = task["id"]
-        progress.set_postfix_str(f"running {id}")
+        display_df = pd.concat([d for d in [
+            ignored_df, pd.DataFrame(results), pd.DataFrame([dict(id=id, dyn_status="running", duration=np.nan, notebook=np.nan)]),
+            pd.DataFrame([t["id"] for t in tasks[1:]], columns=["id"]).assign(dyn_status="queued", duration=np.nan, notebook=np.nan)
+        ] if not len(d.index)==0], ignore_index=True)
+        display_str = display_df.assign(notebook=('file://'+display_df.pop("notebook").astype(str)).str.replace('file://nan', 'nan', regex=False)).to_markdown()
+        print(display_str)
+        # progress.set_postfix_str(f"running {id}")
         if len(set(task["rec_depends_on"]) - set(already_done)) > 0:
             raise Exception(f'Problem {set(task["rec_depends_on"]) - set(already_done)}')
         run_folder = Path(task["run_folder"]+".tmp")
@@ -238,25 +257,37 @@ def execute_runs(i, cell):
             for cid in consequently_failed:
                 results.append(dict(id=cid, dyn_status=f"fail_dynpred_{id}"))
             tasks = left_tasks
-            progress.total-= len(consequently_failed)
-        duration = time.time() - start_time
+        finally:
+            duration = time.time() - start_time
+            with (run_folder/"run_metadata.yaml").open("w") as f:
+                yaml.dump(dict(run_duration=duration), f)
+            # progress.total-= len(consequently_failed)
+        
         if status=="sucess":
             if Path(task["run_folder"]).exists():
                 shutil.rmtree(Path(task["run_folder"]))
             shutil.move(run_folder, task["run_folder"])
-            logger.info(f"Task {id} was a success. Notebook html available at: file://{Path(task['run_folder']).resolve()/'notebook.html'}")
-        else:
-            print(errors[-1])
-            logger.error(f"Task {id} failed. Notebook html available at: file://{run_folder.resolve()/'notebook.html'}")
-        results.append(dict(id=id, dyn_status=status, duration=duration))
-        progress.update(1)
+            notebook_html = f"{Path(task['run_folder']).resolve()/'notebook.html'}"
+            # logger.info(f"Task {id} was a success. Notebook html available at: file://{Path(task['run_folder']).resolve()/'notebook.html'}")
+        else: 
+            notebook_html = f"{run_folder.resolve()/'notebook.html'}"
+            # print(errors[-1])
+            # logger.error(f"Task {id} failed. Notebook html available at: file://{run_folder.resolve()/'notebook.html'}")
+        results.append(dict(id=id, dyn_status=status, duration=duration, notebook=notebook_html))
+        # progress.update(1)
         already_done.append(id)
         tasks = tasks[1:]
+        print(f"\033[{n_tasks+2}A", end= "")
+        print("\033[J", end= "")
     results = pd.DataFrame(results, columns=["id", "dyn_status", "duration"])
     results.to_json(summary_folder/'code'/'run_result.json')
     print("")
     logger.info("Summary table")
-    print(pd.concat([ignored_df[["id"]].assign(dyn_status="skipped"), results]))
+    display_df = pd.concat([d for d in [
+        ignored_df, pd.DataFrame(results),
+    ] if not len(d.index) ==0], ignore_index=True)
+    display_str = display_df.assign(notebook=('file://'+display_df.pop("notebook").astype(str)).str.replace('file://nan', 'nan')).to_markdown()
+    print(display_str)
 
 
 templates = dict(
