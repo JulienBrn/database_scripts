@@ -511,7 +511,10 @@ if sysargs["summary_folder"] =="default":
 else:
     summary_folder = Path(sysargs["summary_folder"])
 if summary_folder.exists():
-    shutil.rmtree(summary_folder)
+    if (summary_folder/'code').exists():
+        shutil.rmtree(summary_folder)
+    else:
+        raise Exception(f'Summary folder {summary_folder} should be empty or already a run folder')
 (summary_folder/'code').mkdir(exist_ok=True, parents=True)
 
 helper_files = ["**/helper.py", "**/config_adapter.py"]
