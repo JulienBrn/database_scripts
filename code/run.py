@@ -436,7 +436,8 @@ result_df = run_df.merge(result_df, on="id", how="left")
 done_runs=pd.concat([done_runs, result_df])
 run_df = run_df.iloc[0:0, :]
 decl_runs = decl_runs.iloc[0:0, :]
-display(result_df)
+col_display_order = ["id", "status", "should_run", "dyn_status", "environment", "depends_on", "rec_depends_on"]
+display(result_df[col_display_order+[col for col in result_df.columns if not col in col_display_order]])
 """,
 r"""
 for row in result_df.to_dict(orient="index").values():
