@@ -181,6 +181,7 @@ nb["cells"].append(nbf.v4.new_code_cell(declare_run_info))
 action_list = config_adapter.load(sysargs["pipeline"])
 
 def stop_exec(i, cell):
+    logger.info("Stop requested")
     raise KeyboardInterrupt
 
 
@@ -200,11 +201,11 @@ def display_runs(i, cell):
 def execute_runs(i, cell):
     df = pd.read_json(summary_folder/'code'/"run_desc.json")
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
-    logger.info(f'{len(already_done)} results skipped')
+    # logger.info(f'{len(already_done)} results skipped')
     ignored_df = df.loc[~df["should_run"]]
     df = df.loc[df["should_run"]]
     tasks = list(df.to_dict(orient="index").values())
-    progress = tqdm.tqdm(desc="Executing", total=len(tasks))
+    progress = tqdm.tqdm(desc="Executing", total=len(tasks), disable=len(tasks)==0)
     results=[]
     errors = []
     while len(tasks) > 0:
@@ -251,7 +252,8 @@ def execute_runs(i, cell):
         tasks = tasks[1:]
     results = pd.DataFrame(results, columns=["id", "dyn_status"])
     results.to_json(summary_folder/'code'/'run_result.json')
-    
+    print("")
+    logger.info("Summary table")
     print(pd.concat([ignored_df[["id"]].assign(dyn_status="skipped"), results]))
 
 
