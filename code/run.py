@@ -255,7 +255,7 @@ def execute_runs(i, cell):
             already_done+=consequently_failed
             left_tasks = [t for t in tasks if not id in t["rec_depends_on"]]
             for cid in consequently_failed:
-                results.append(dict(id=cid, dyn_status=f"fail_dynpred_{id}"))
+                results.append(dict(id=cid, dyn_status=f"fail_dynpred_{id}", duration=np.nan, notebook=np.nan))
             tasks = left_tasks
         finally:
             duration = time.time() - start_time
