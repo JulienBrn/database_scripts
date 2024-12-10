@@ -13,7 +13,6 @@
 - action: declare_run
   script: "fiber_psth"
   id: "fiber_psth"
-  recompute: always
 
   script_params:
     fiber_event_path: "/home/julienb/Documents/Data/Luisa/Rat237/opto_MT/Session--Rat237_20240730/fiber/Events.csv"
@@ -21,5 +20,4 @@
     config_path: '{dbfolder}/templates/rats/fiber_psth.yaml'
   run_folder: '{dbfolder}/runs/{pipeline_name}/fiber_psth'
 
-- action: display_run
 - action: run
