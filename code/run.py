@@ -282,7 +282,7 @@ def execute_runs(i, cell):
         tasks = tasks[1:]
         print(f"\033[{n_tasks+2}A", end= "")
         print("\033[J", end= "")
-    results = pd.DataFrame(results, columns=["id", "dyn_status", "duration"])
+    results = pd.DataFrame(results, columns=["id", "dyn_status", "duration", "notebook"])
     results.to_json(summary_folder/'code'/'run_result.json')
     print("")
     logger.info("Summary table")
