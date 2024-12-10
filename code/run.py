@@ -201,6 +201,9 @@ def display_runs(i, cell):
 def execute_runs(i, cell):
     df = pd.read_json(summary_folder/'code'/"run_desc.json")
     n_tasks = len(df.index)
+    if n_tasks ==0:
+        logger.warning("No tasks to be ran")
+        return
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
     # logger.info(f'{len(already_done)} results skipped')
     import numpy as np
