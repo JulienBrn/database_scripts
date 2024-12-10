@@ -1,0 +1,25 @@
+- action: declare_var
+  name: 'dbfolder'
+  value: !expand_envvars '$DBFOLDER'
+
+# - action: declare_var
+#   name: 'fiber'
+#   value: '/home/julienb/Documents/Data/Birds/Pink7'
+
+- action: declare_var
+  name: 'pipeline_name'
+  value: 'fiber_psth'
+
+- action: declare_run
+  script: "fiber_psth"
+  id: "fiber_psth"
+  recompute: always
+
+  script_params:
+    fiber_event_path: "/home/julienb/Documents/Data/Luisa/Rat237/opto_MT/Session--Rat237_20240730/fiber/Events.csv"
+    fiber_data_path: "/home/julienb/Documents/Data/Luisa/Rat237/opto_MT/Session--Rat237_20240730/fiber/Fluorescence.csv"
+    config_path: '{dbfolder}/templates/rats/fiber_psth.yaml'
+  run_folder: '{dbfolder}/runs/{pipeline_name}/fiber_psth'
+
+- action: display_run
+- action: run
