@@ -239,6 +239,7 @@ def execute_runs(i, cell):
             if dcut > 0:
                 display_str +=f"{dcut} previous results\n"
                 display_str+=final_display_df.iloc[0:dcut].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
+            display_str+="Near currently running task table\n"
             display_str += final_display_df.iloc[dcut:fcut, :].to_markdown()
             if len(display_df.index) - fcut > 0:
                 display_str +=f"\n{len(display_df.index) - fcut-1} more...\n"
