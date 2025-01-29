@@ -165,6 +165,10 @@ def python_eval(ctx, code):
     res = res["res"]
     return res
 
+def get(ctx, var):
+    print(ctx.variables)
+    return ctx.variables[var]
+
 def table_to_json(ctx, params):
     params = ctx.evaluate(params)
     df = ctx.tables[params["table_name"]]
@@ -183,7 +187,7 @@ class Context:
             self.methods=dict(
                 raw=raw, hash=hash, expand_envvars=expand_envvars, python_eval=python_eval,
                 from_rows=from_rows, add_columns=add_columns, read_csv=read_csv, column_to_list=column_to_list, table_to_json=table_to_json,
-                extract_stem=extract_stem, file_scan=find_files)
+                extract_stem=extract_stem, file_scan=find_files, get=get)
         else:
             self.methods= {}
 

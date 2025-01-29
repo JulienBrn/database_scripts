@@ -231,7 +231,17 @@ def execute_runs(i, cell):
             ignored_df, pd.DataFrame(results), pd.DataFrame([dict(id=id, dyn_status="running", duration=np.nan, notebook=np.nan)]),
             pd.DataFrame([t["id"] for t in tasks[1:]], columns=["id"]).assign(dyn_status="queued", duration=np.nan, notebook=np.nan)
         ] if not len(d.index)==0], ignore_index=True)
-        display_str = display_df.assign(notebook=('file://'+display_df.pop("notebook").astype(str)).str.replace('file://nan', 'nan', regex=False)).to_markdown()
+        final_display_df = display_df.assign(notebook=('file://'+display_df.pop("notebook").astype(str)).str.replace('file://nan', 'nan', regex=False))
+        if len(final_display_df.index) > 20:
+            dcut = max(len(ignored_df.index) + len(results) - 3, 0)
+            fcut = min(len(display_df.index), dcut+10)
+            display_str = ""
+            if dcut > 0:
+                display_str +=f"{dcut} previous results\n"
+            display_str += final_display_df.iloc[dcut:fcut, :].to_markdown()
+            if len(display_df.index) - fcut > 0:
+                display_str +=f"\n{len(display_df.index) - fcut} more...\n"
+        n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
         if len(set(task["rec_depends_on"]) - set(already_done)) > 0:
@@ -280,7 +290,7 @@ def execute_runs(i, cell):
         # progress.update(1)
         already_done.append(id)
         tasks = tasks[1:]
-        print(f"\033[{n_tasks+2}A", end= "")
+        print(f"\033[{n_display}A", end= "")
         print("\033[J", end= "")
     results = pd.DataFrame(results, columns=["id", "dyn_status", "duration", "notebook"])
     results.to_json(summary_folder/'code'/'run_result.json')
