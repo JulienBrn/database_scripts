@@ -241,6 +241,8 @@ def execute_runs(i, cell):
             display_str += final_display_df.iloc[dcut:fcut, :].to_markdown()
             if len(display_df.index) - fcut > 0:
                 display_str +=f"\n{len(display_df.index) - fcut} more...\n"
+        else:
+            display_str = final_display_df.iloc[dcut:fcut, :].to_markdown()
         n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
