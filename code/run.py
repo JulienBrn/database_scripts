@@ -238,9 +238,11 @@ def execute_runs(i, cell):
             display_str = ""
             if dcut > 0:
                 display_str +=f"{dcut} previous results\n"
+                display_str+=final_display_df.iloc[0:dcut].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
             display_str += final_display_df.iloc[dcut:fcut, :].to_markdown()
             if len(display_df.index) - fcut > 0:
                 display_str +=f"\n{len(display_df.index) - fcut} more...\n"
+                display_str+=final_display_df.iloc[fcut+1:].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
         else:
             display_str = final_display_df.iloc[dcut:fcut, :].to_markdown()
         n_display = display_str.count("\n") +1
