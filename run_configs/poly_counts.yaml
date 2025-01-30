@@ -5,7 +5,7 @@
 
 - action: declare_var
   name: 'result_folder'
-  value: '/home/julienb/Documents/Data/Rats/Test/poly_counts'
+  value: !expand_envvars '$FILER/T4b/Temporary/poly_counts_ex'
 
 - action: declare_var
   name: dat_files
