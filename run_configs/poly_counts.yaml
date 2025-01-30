@@ -1,0 +1,27 @@
+
+- action: declare_var
+  name: 'poly_dat_folder'
+  value: !expand_envvars '$FILER/T4b/Datasets/Rats/DOPA-Move/Version-RAW-Raphael/Luisa/Chrimson/Rat226/opto_Fastest/'
+
+- action: declare_var
+  name: 'result_folder'
+  value: '/home/julienb/Documents/Data/Rats/Test/poly_counts'
+
+- action: declare_var
+  name: dat_files
+  value: !python_eval res = [str(f.resolve()) for f in Path(poly_dat_folder).glob('**/*.dat')]
+
+
+- action: declare_run
+  script: "poly_counts"
+  id: "poly_counts"
+
+  script_params:
+    dat_files: !get 'dat_files'
+    counts:
+      count_1: 1
+      n_files: -1
+      count_node_14: 14
+  run_folder: '{result_folder}'
+
+- action: run

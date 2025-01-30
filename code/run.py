@@ -245,7 +245,7 @@ def execute_runs(i, cell):
                 display_str +=f"\n{len(display_df.index) - fcut-1} more...\n"
                 display_str+=final_display_df.iloc[fcut+1:].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
         else:
-            display_str = final_display_df.iloc[dcut:fcut, :].to_markdown()
+            display_str = final_display_df.to_markdown()
         n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
