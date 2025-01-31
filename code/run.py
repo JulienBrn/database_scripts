@@ -252,7 +252,7 @@ def execute_runs(i, cell):
         curr_time=time.time()
         avg_time_per_task = (curr_time-all_execs_start_time)/ (num_todo - len(tasks)) if len(tasks) != num_todo else np.nan
         time_remaining = avg_time_per_task * len(tasks)
-        display_str+=f"\nExpected remaining time: {datetime.timedelta(seconds=time_remaining) if not np.isnan(time_remaining) else 'NA'}\navg_time_per_task: {datetime.timedelta(seconds=avg_time_per_task if not np.isnan(avg_time_per_task) else 'NA')}"
+        display_str+=f"\n{100*(num_todo - len(tasks))/num_todo:.2f}% done. Expected remaining time: {datetime.timedelta(seconds=time_remaining) if not np.isnan(time_remaining) else 'NA'}\navg_time_per_task: {datetime.timedelta(seconds=avg_time_per_task if not np.isnan(avg_time_per_task) else 'NA')}"
         n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
