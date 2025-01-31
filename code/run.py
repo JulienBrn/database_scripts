@@ -250,7 +250,7 @@ def execute_runs(i, cell):
         else:
             display_str += final_display_df.to_markdown()
         curr_time=time.time()
-        avg_time_per_task = (curr_time-all_execs_start_time)/ (n_tasks - len(tasks)) if len(tasks) != n_tasks else np.nan
+        avg_time_per_task = (curr_time-all_execs_start_time)/ (num_todo - len(tasks)) if len(tasks) != num_todo else np.nan
         time_remaining = avg_time_per_task * len(tasks)
         display_str+=f"\nExpected remaining time: {time_remaining}\navg_time_per_task: {avg_time_per_task}"
         n_display = display_str.count("\n") +1
