@@ -205,7 +205,8 @@ def execute_runs(i, cell):
         logger.warning("No tasks to be ran")
         return
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
-    logger.info(f"Executing tasks {len(already_done).index}/{n_tasks} already done (skipped)")
+    num_todo = len(already_done).index
+    logger.info(f"Executing tasks {num_todo}/{n_tasks} already done (skipped)")
     # logger.info(f'{len(already_done)} results skipped')
     import numpy as np
     ignored_df = df.loc[~df["should_run"]].assign(dyn_status="skipped")
@@ -225,6 +226,7 @@ def execute_runs(i, cell):
     results=[]
     errors = []
     print("")
+    all_execs_start_time = time.time()
     while len(tasks) > 0:
         task = tasks[0]
         id = task["id"]
@@ -247,6 +249,10 @@ def execute_runs(i, cell):
                 display_str+=final_display_df.iloc[fcut+1:].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
         else:
             display_str += final_display_df.to_markdown()
+        curr_time=time.time()
+        avg_time_per_task = (curr_time-start_time)/ (n_tasks - len(tasks)) if len(tasks) != n_tasks else np.nan
+        time_remaining = avg_time_per_task * len(tasks)
+        display_str+=f"\nExpected remaining time: {time_remaining}\navg_time_per_task: {avg_time_per_task}"
         n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
