@@ -205,6 +205,7 @@ def execute_runs(i, cell):
         logger.warning("No tasks to be ran")
         return
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
+    logger.info(f"Executing tasks {len(already_done.index)}/{n_tasks} already done (skipped)")
     # logger.info(f'{len(already_done)} results skipped')
     import numpy as np
     ignored_df = df.loc[~df["should_run"]].assign(dyn_status="skipped")
