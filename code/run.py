@@ -232,20 +232,20 @@ def execute_runs(i, cell):
             pd.DataFrame([t["id"] for t in tasks[1:]], columns=["id"]).assign(dyn_status="queued", duration=np.nan, notebook=np.nan)
         ] if not len(d.index)==0], ignore_index=True)
         final_display_df = display_df.assign(notebook=('file://'+display_df.pop("notebook").astype(str)).str.replace('file://nan', 'nan', regex=False))
+        display_str = ""
         if len(final_display_df.index) > 20:
             dcut = max(len(ignored_df.index) + len(results) - 3, 0)
             fcut = min(len(display_df.index), dcut+10)
-            display_str = ""
             if dcut > 0:
                 display_str +=f"{dcut} previous results\n"
                 display_str+=final_display_df.iloc[0:dcut].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
-            display_str+="Near currently running task table\n"
-            display_str += final_display_df.iloc[dcut:fcut, :].to_markdown()
+            display_str+="\nNear currently running task table\n"
+            display_str += final_display_df.iloc[dcut:fcut, :].to_markdown() + "\n"
             if len(display_df.index) - fcut > 0:
                 display_str +=f"\n{len(display_df.index) - fcut-1} more...\n"
                 display_str+=final_display_df.iloc[fcut+1:].groupby("dyn_status").size().reset_index().to_markdown()+"\n"
         else:
-            display_str = final_display_df.to_markdown()
+            display_str += final_display_df.to_markdown()
         n_display = display_str.count("\n") +1
         print(display_str)
         # progress.set_postfix_str(f"running {id}")
