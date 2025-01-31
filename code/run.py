@@ -205,8 +205,7 @@ def execute_runs(i, cell):
         logger.warning("No tasks to be ran")
         return
     already_done = df["id"].loc[(~df["should_run"]) & (df["status"]=="done")].to_list()
-    num_todo = len(already_done)
-    logger.info(f"Executing tasks {num_todo}/{n_tasks} already done (skipped)")
+    logger.info(f"Checking status of {n_tasks} tasks")
     # logger.info(f'{len(already_done)} results skipped')
     import numpy as np
     ignored_df = df.loc[~df["should_run"]].assign(dyn_status="skipped")
@@ -222,7 +221,8 @@ def execute_runs(i, cell):
     ignored_df = ignored_df[["id", "dyn_status", "duration", "notebook"]]
     df = df.loc[df["should_run"]]
     tasks = list(df.to_dict(orient="index").values())
-    # progress = tqdm.tqdm(desc="Executing", total=len(tasks), disable=len(tasks)==0)
+    num_todo = len(tasks)
+    logger.info(f"Executing tasks {n_tasks- num_todo}/{n_tasks} skipped because already computed, {num_todo} remaining")
     results=[]
     errors = []
     print("")
